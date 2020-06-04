@@ -1,17 +1,8 @@
-##
-# Training Baseline Models LR and Constant
-#
-##
+## Train Logistic Regression and Constant models
 
-
-
-
-#######################
-# save MLB
-# maybe the fit calls could go in a separate function in model_functions (as make_model)
-#######################
 
 ## Imports
+
 import argparse
 import numpy as np
 import pandas as pd
@@ -20,7 +11,6 @@ import tensorflow as tf
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.keras.callbacks import TensorBoard
-
 
 import nltk
 nltk.download('stopwords') 

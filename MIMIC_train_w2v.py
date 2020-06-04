@@ -3,10 +3,6 @@
 
 ## Imports
 
-# Global variables
-from constants import *
-
-# Modules
 import argparse
 import numpy as np
 import pandas as pd
@@ -20,7 +16,8 @@ from nltk.corpus import stopwords as STOP_WORDS
 import nltk
 nltk.download('stopwords')
 
-# Custom Modules
+# Custom modules
+from constants import *
 import utils
 
 def main(args):

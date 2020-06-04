@@ -1,33 +1,18 @@
-####
-# Train MIMIC
-#
-####
+## Train Neural Network models
 
 
-####################
-# LR and constant are not included here. Could they be though?
-# How to call a model? 
-# for parser: avg, MODEL_NAME, epochs, batch_size, verbose
-# Fix to print best epoch
-# Change to callback_weights
-
-# Get best_t from callback
-# print best epoch as well (within callback)
-# Append .h5 to MODEL_NAME
-#################
-
-# Imports
+## Imports
 
 import argparse
-
 import tensorflow as tf
-
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 
+# Custom modules
+from constants import *
 import utils
 import model_functions as fun
 
-from constants import *
+
 
 def main(args):
     ## 1. Load preprocessed data
@@ -56,10 +41,11 @@ def main(args):
     if args.verbose: model_args.model.summary()
     
     # Instantiate callbacks
-    tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
-    f1_callback = fun.f1_callback_save_weights(model_args, tb_callback = tensorboard_callback, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
+    # tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
+    f1_callback = fun.f1_callback_save_weights(model_args, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
 
-    callbacks = [tensorboard_callback, f1_callback]
+    # callbacks = [tensorboard_callback, f1_callback]
+    callbacks = [f1_callback]
 
     if args.MODEL_NAME == 'cnn_att':
         def scheduler(epoch):

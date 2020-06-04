@@ -1,20 +1,8 @@
-#####
-# Process inputs based on embedding matrix
-#
-#####
+## Process inputs based on embedding matrix
 
-
-######################
-# 
-# 
-######################
 
 ## Imports
 
-# Global variables
-from constants import *
-
-# Modules
 import numpy as np
 import pandas as pd
 import pickle
@@ -23,7 +11,8 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
-# Custom Modules
+# Custom modules
+from constants import *
 import utils
 
 

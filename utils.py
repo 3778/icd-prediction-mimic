@@ -1,25 +1,14 @@
-##
-#
-# Utils for repo
-#
-##
-
-
-####################
-# fix get_model
-#
-#####################
+# Imports
 
 import numpy as np
 import pickle
 import pandas as pd
 import re
 
+# Custom modules
+from constants import *
 import model_functions as fun
 import models
-
-
-from constants import *
 
 
 
@@ -89,7 +78,6 @@ def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
 
 def split_LR(df, mlb, all_icds, train_ids, val_ids, test_ids):
     
-   
     # Split by HADM_IDS
     train_set = df[df.HADM_ID.isin(train_ids.HADM_ID)]
     val_set = df[df.HADM_ID.isin(val_ids.HADM_ID)]

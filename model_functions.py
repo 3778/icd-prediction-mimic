@@ -1,30 +1,15 @@
-# Functions for use in notebooks
-
-
-############
-# Correctly load model
-# Load args from last iterations
-############
-
 # Imports
+
 import numpy as np
 import pandas as pd
 import pickle
-
-import matplotlib.pyplot as plt
-
-# Scipy sparse
 from scipy.sparse import csr_matrix
-
-# Sklearn
 from sklearn.metrics import precision_recall_fscore_support
-
-# TF Keras
 import tensorflow as tf
-from tensorflow.keras.callbacks import Callback, ProgbarLogger
+from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
 
-
+# Custom modules
 from constants import *
 import utils
 
@@ -252,135 +237,6 @@ def sweep_k(model_args, ks = np.linspace(1,20,20, dtype='int32'), avg='micro', c
                                 }
 
     return model_args
-
-
-## Callback to compute F1 and save to Tensorboard logs
-class f1_callback_save(Callback):
-    """
-    Callback for use in keras. 
-    Computes f1 in validation set (model_args.x[1], model_args.y[1]) and prints it.
-    Optionally, it can save the best model based on f1_val.
-    If a tensorboard callback is specified, f1_val is stored in its logs.
-    """
-    
-    def __init__(self, model_args, tb_callback=None, store_best=True, best_name='best_model.h5', avg='micro'):
-        self.model_args = model_args
-        self.tb_callback = tb_callback
-        self.avg = avg
-        self.best_f1_val = 0
-        self.store_best = store_best
-        self.best_name = best_name
-
-    # Execute after each epoch    
-    def on_epoch_end(self, epoch, logs={}):
-
-        # Predict and compute f1 val
-        self.model_args.predict([0,1,0], custom_model=self.model)   
-        self.model_args.metrics([0,1,0], avg=self.avg, verbose=1)
-        self.model_args = sweep_thresholds(self.model_args,train_val_test=[0,1,0], predicted_model=True)
-        print('')
-        
-        # Set items to store in Tensorboard
-        items_to_write={
-            "f1_val": self.model_args.f1_score[1]
-        }
-        
-        # Send to Tensorboard logs
-        if self.tb_callback != None:
-            writer = self.tb_callback.writer
-            for name, value in items_to_write.items():
-                summary = tf.summary.Summary()
-                summary_value = summary.value.add()
-                summary_value.simple_value = value
-                summary_value.tag = name
-                writer.add_summary(summary, epoch)
-                writer.flush()  
-
-        # Store best model
-        if self.store_best:
-            if self.model_args.f1_score[1] > self.best_f1_val:
-                self.best_model = self.model_args.model
-                print('F1 val improved --> storing best model')
-                self.best_f1_val = self.model_args.f1_score[1]
-                self.best_t = self.model_args.sweep_results['best_threshold']
-                self.best_epoch = epoch
-                self.best_model.save(self.best_name)
-
-        
-
-    # Execute after last epoch    
-    def on_train_end(self, logs={}):
-        print('\nBest F1 val at epoch ', self.best_epoch+1,'.\n', sep='')
-        return
-
-
-
-
-
-def make_model(model, model_args, embedding_matrix, model_name='default', dataset='MIMIC', avg='micro', store_best=True, epochs=10, batch_size=32, verbose=2, fitted_model=False):
-    """
-    Function to construct, fit, compute metrics and sweep through thresholds for a given model.
-
-    Parameters
-    -----
-    model: uncompiled tf.keras model object. \n
-    model_args: model_args class object with loaded x and y. \n
-    embedding_matrix: embedding matrix with embedding vectors.\n
-    model_name: string naming the model.\n
-    dataset: string with name of dataset.\n
-    avg: average method for multi-label metrics computation.\n
-    store_best: whether to save the model with weights of the best epoch based on F1 val.\n
-    epochs: number of training epochs.\n
-    batch_size: size of mini-batches.   
-
-    Output
-    -----
-    model_args class with fitted model \n
-    """
-
-    save_name = dataset + '_' + model_name + '_' + 'vec' + str(embedding_matrix.shape[1]) + '_pad' + str(model_args.x[0].shape[1])
-    # Params
-    log_dir="logs/fit/" + save_name
-    
-    if store_best:
-        best_name = '/home/ubuntu/NLDoc-ICD/models/'+ save_name + '.h5'
-
-    # Clear any previous session of tf.keras
-    tf.keras.backend.clear_session()
-
-    # Construct model
-    if fitted_model:
-        model_args.model = load_model(best_name)
-    else:
-        model_args.model = model(model_args, embedding_matrix = embedding_matrix)
-
-    # Instantiante callbacks
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
-    f1_callback = f1_callback_save(model_args, tensorboard_callback, avg=avg, store_best=store_best, best_name=best_name)
-
-    # Fit model
-    history = model_args.model.fit(model_args.x[0], model_args.y[0], validation_data=(model_args.x[1],model_args.y[1]),
-                                epochs=epochs, batch_size=batch_size, callbacks=[tensorboard_callback, f1_callback], verbose=verbose)
-    
-    # Metrics at default 0.5 threshold
-    if store_best:
-        model_args.predict(custom_model=load_model(best_name))
-    else:
-        model_args.predict()
-
-    model_args.metrics()
-    
-    print('\n')
-
-    # Sweep threhsolds to and print metrics @ best_threshold
-    if store_best:
-        model_args = sweep_thresholds(model_args, thresholds= np.linspace(0.01,0.5,50), avg=avg, custom_model=load_model(best_name))
-    else:
-        model_args = sweep_thresholds(model_args, thresholds= np.linspace(0.01,0.5,50), avg=avg)
-    
-    return model_args
-
-
 
 
 class f1_callback_save_weights(Callback):
