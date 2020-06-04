@@ -24,7 +24,3 @@ MAX_LENGTH = 2000
 # Path to save trained models
 # SAVE_DIR = '/path/to/repo/models/'
 
-DATA_DIR = '/home/ubuntu/NLDoc-ICD/physionet.org/files/mimiciii/1.4/'
-W2V_DIR = '/home/ubuntu/NLDoc-ICD/repo_test/'
-
-SAVE_DIR = '/home/ubuntu/NLDoc-ICD/repo_test/'
