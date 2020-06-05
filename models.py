@@ -1,15 +1,8 @@
-## Models
-
-
-# Imports
-
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, CuDNNGRU, GlobalAveragePooling1D, BatchNormalization
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
-
-
 
 ######## LR MODEL ######## 
 

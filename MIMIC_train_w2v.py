@@ -1,8 +1,5 @@
 ### Train Word2Vec word vectors for the MIMIC-III dataset.
 
-
-## Imports
-
 import argparse
 import numpy as np
 import pandas as pd
@@ -12,12 +9,10 @@ import random
 from time import time
 from gensim.models import Word2Vec
 from nltk.corpus import stopwords as STOP_WORDS
-
 import nltk
 nltk.download('stopwords')
 
-# Custom modules
-from constants import *
+from constants import DATA_DIR, W2V_DIR, W2V_SIZE
 import utils
 
 def main(args):

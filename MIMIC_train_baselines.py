@@ -1,8 +1,5 @@
 ## Train Logistic Regression and Constant models
 
-
-## Imports
-
 import argparse
 import numpy as np
 import pandas as pd
@@ -16,8 +13,7 @@ import nltk
 nltk.download('stopwords') 
 from nltk.corpus import stopwords as STOP_WORDS
 
-# Custom modules
-from constants import *
+from constants import DATA_DIR, SAVE_DIR
 import model_functions as fun
 import utils
 
@@ -64,10 +60,11 @@ def main(args):
         tf.keras.backend.clear_session()
 
         # Instantiate callbacks
-        tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
-        f1_callback = fun.f1_callback_save_weights(model_args, tb_callback = tensorboard_callback, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
+        # tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
+        f1_callback = fun.f1_callback_save_weights(model_args, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
 
-        callbacks = [tensorboard_callback, f1_callback]
+        # callbacks = [tensorboard_callback, f1_callback]
+        callbacks = [f1_callback]
 
         # Call model
         model_args.model = utils.get_model(model_args=model_args, args=args)
@@ -90,8 +87,8 @@ def main(args):
         model_args.metrics(threshold = model_args.best_t)
         print('\n--------------------\n')
 
-        # Save args to correctly load weights
-        with open(SAVE_DIR + MODEL_NAME + '_args.pkl', 'wb') as file:
+        # Save args to correctly load weights (this will go when I manage to correcly save models)
+        with open(SAVE_DIR + '_args.pkl', 'wb') as file:
             pickle.dump(args, file)
 
 

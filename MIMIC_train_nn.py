@@ -1,24 +1,19 @@
 ## Train Neural Network models
 
-
-## Imports
-
 import argparse
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 
-# Custom modules
-from constants import *
+from constants import SAVE_DIR, W2V_SIZE, MAX_LENGTH
 import utils
 import model_functions as fun
-
 
 
 def main(args):
     ## 1. Load preprocessed data
 
     # Embedding layer
-    wv_embedding_matrix, row_dict = utils.load_w2v_emb(w2v_vec_size=W2V_SIZE)
+    wv_embedding_matrix, _ = utils.load_w2v_emb(w2v_vec_size=W2V_SIZE)
 
     # Correspondent preprocessed inputs and targets (x,y)
     # Note that x = [x_train, x_val, x_test] and y = [y_train, y_val, y_test]
@@ -73,9 +68,9 @@ def main(args):
     model_args.metrics(threshold = model_args.best_t)
     print('\n--------------------\n')
 
-    # Save args to correctly load weights
+    # Save args to correctly load weights (this will go when I manage to correcly save models)
     with open(SAVE_DIR + 'args.pkl', 'wb') as file:
-    pickle.dump(args, file)
+        pickle.dump(args, file)
 
 
 

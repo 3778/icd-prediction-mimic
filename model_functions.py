@@ -1,5 +1,3 @@
-# Imports
-
 import numpy as np
 import pandas as pd
 import pickle
@@ -9,8 +7,6 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
 
-# Custom modules
-from constants import *
 import utils
 
 ## Class for model prediction and metrics

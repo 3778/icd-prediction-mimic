@@ -16,11 +16,11 @@ MAX_LENGTH = 2000
 # Directories
 
 # Path for MIMI-III tables
-# DATA_DIR = '/path/to/repo/data/'
+DATA_DIR = '/path/to/repo/data/'
 
 # Path to save Word2Vec embeddings 
-# W2V_DIR = '/path/to/repo/models/w2v/'
+W2V_DIR = '/path/to/repo/models/w2v/'
 
 # Path to save trained models
-# SAVE_DIR = '/path/to/repo/models/'
+SAVE_DIR = '/path/to/repo/models/'
 

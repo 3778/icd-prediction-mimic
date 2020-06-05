@@ -1,16 +1,11 @@
-# Imports
-
 import numpy as np
 import pickle
 import pandas as pd
 import re
 
-# Custom modules
-from constants import *
+from constants import SAVE_DIR, W2V_DIR, W2V_SIZE, MAX_LENGTH
 import model_functions as fun
 import models
-
-
 
 def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()

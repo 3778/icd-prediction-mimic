@@ -15,7 +15,7 @@ To install dependencies, run ?
 ## General pipeline:
 
 
-1. Edit constants.py to match the repo directory.
+1. Edit constants.py to point to the correct directories.
 
 2. In /data/, place the files below:
 	- NOTEEVENTS.csv.gz (from MIMIC-III)
@@ -37,10 +37,11 @@ To install dependencies, run ?
 	- MIMIC_analyze_predictions.ipynb, where some additional analyses from the predictions of a model can be seen.
 
 
-## Analyze CNN_Att model:
+## Analyze trained models:
 
-We provided our trained CNN_Att weights (SAVE_DIR/cnn_att.h5). To get predictions and metrics for this model:
+Our trained models are provided at [physionet_model_link](url). To get predictions and metrics for them:
 
+- Place the desired models in /models/.
 - Run Steps 1 to 5. 
-- Run all cells of notebook notebooks/MIMIC_analyze_predictions.ipynb.
+- In notebook /notebooks/MIMIC_analyze_predictions.ipynb, select a model and run all cells.
 

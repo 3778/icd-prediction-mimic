@@ -4,13 +4,9 @@
 # This script creates a table with HADM_IDs linked to unique discharge summaries and a correspondent ICD codes
 ####
 
-
-## Imports
-
 import pandas as pd
 
-# Custom modules
-from constants import *
+from constants import DATA_DIR
 
 
 df_text = (pd.read_csv(DATA_DIR + 'NOTEEVENTS.csv.gz')
@@ -27,9 +23,6 @@ df_icds = (pd.read_csv(DATA_DIR + 'DIAGNOSES_ICD.csv.gz')
              .reset_index())
 
 df_mimic = pd.merge(df_icds,df_text,on='HADM_ID',how='inner')
-
-
-## 5. Save dataset
 
 pd.to_pickle(df_mimic, DATA_DIR + 'mimic3_data.pkl')
 
