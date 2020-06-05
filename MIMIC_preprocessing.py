@@ -34,10 +34,9 @@ df_mimic = pd.merge(df_icds,df_text,on='HADM_ID',how='inner')
 pd.to_pickle(df_mimic, DATA_DIR + 'mimic3_data.pkl')
 
 
-print('\n-------------\n')
-
-print('Total unique ICD codes:', df_mimic.ICD9_CODE.explode().unique().shape[0])
-print('Total samples:', df_mimic.shape[0])
-
-print('\n\nData preprocessed! Now run MIMIC_train_w2v.py to train Word2Vec embeddings or MIMIC_train_baselines.py to train LR or Constant models.')
-
+print(f'''
+-------------
+Total unique ICD codes: {df_mimic.ICD9_CODE.explode().nunique()}
+Total samples: {df_mimic.shape[0]}
+Data preprocessed! Now run MIMIC_train_w2v.py to train Word2Vec embeddings or MIMIC_train_baselines.py to train LR or Constant models.
+''')
