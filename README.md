@@ -24,7 +24,7 @@ To install dependencies, run ?
 	
 3. Run MIMIC_preprocessing.py to select discharge summaries and merge MIMIC-III tables.
 
-4. Run MIMIC_w2v_train.py to train Word2Vec word embeddings for the neural network models.
+4. Run MIMIC_train_w2v.py to train Word2Vec word embeddings for the neural network models.
 
 5. Run MIMIC_process_inputs.py in order to process the inputs to match the embedding matrix and multi-hot encode the targets.
 
@@ -42,6 +42,6 @@ To install dependencies, run ?
 Our trained models are provided at [physionet_model_link](url). To get predictions and metrics for them:
 
 - Place the desired models in /models/.
-- Run Steps 1 to 5. 
+- Run steps 1 to 5. 
 - In notebook /notebooks/MIMIC_analyze_predictions.ipynb, select a model and run all cells.
 
