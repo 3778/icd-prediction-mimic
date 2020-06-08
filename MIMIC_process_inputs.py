@@ -35,7 +35,7 @@ wv_embedding_matrix, row_dict = utils.load_w2v_emb()
 # Apply preprocessing
 df['int_seq'] = (df['TEXT']
                 .pipe(utils.preprocessor_word2vec)
-                .apply(lambda x: utils.convert_data_to_index(x, row_dict))
+                .apply(utils.convert_data_to_index, row_dict=row_dict)
                 .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
                                             maxlen = MAX_LENGTH, value = row_dict['_padding_']))))
 
