@@ -43,13 +43,7 @@ def preprocessor_word2vec(text_series):
 
 
 def convert_data_to_index(string_data, row_dict):
-    index_data = []
-    for word in string_data:
-        if word in row_dict.keys():
-            index_data.append(row_dict[word])
-        else:
-            index_data.append(row_dict['_unknown_'])
-    return index_data
+    return [row_dict.get(word, row_dict['_unkown_']) for word in string_data]
 
 
 def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
@@ -203,6 +197,5 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         """)
 
     return x, y, mlb
-
 
 
