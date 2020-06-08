@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
 import pandas as pd
-import re
 
 from constants import SAVE_DIR, W2V_DIR, W2V_SIZE, MAX_LENGTH
 import model_functions as fun
@@ -9,6 +8,11 @@ import models
 
 def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()
+
+
+def load_ids_from_txt(filepath):
+    with open(filepath, 'r') as f:
+        return f.read().split()
 
 
 def preprocessor(text_series):
@@ -19,21 +23,23 @@ def preprocessor(text_series):
             .str.split())
 
 
-def preprocessor_tfidf(text):
-    text = re.sub('\[\*\*[^\]]*\*\*\]', '', text)
-    text = re.sub('<[^>]*>', '', text)
-    text = re.sub('[\W]+', ' ', text.lower()) 
-    text = re.sub(" \d+", " ", text)
-    return text
+def preprocessor_tfidf(text_series):
+    return (text_series
+            .str.sub('\[\*\*[^\]]*\*\*\]','')
+            .str.sub('<[^>]*>', '')
+            .str.sub('[\W]+', ' ')
+            .str.lower()
+            .str.sub(' \d+', ' '))
 
 
-def preprocessor_word2vec(text):
-    text = re.sub('\[\*\*[^\]]*\*\*\]', '', text)
-    text = re.sub('<[^>]*>', '', text)
-    text = re.sub('[\W]+', ' ', text.lower()) 
-    text = re.sub(" \d+", " ", text)
-    text = text.split()
-    return text
+def preprocessor_word2vec(text_series):
+    return (text_series
+            .str.sub('\[\*\*[^\]]*\*\*\]','')
+            .str.sub('<[^>]*>', '')
+            .str.sub('[\W]+', ' ')
+            .str.lower()
+            .str.sub(' \d+', ' ')
+            .str.split())
 
 
 def convert_data_to_index(string_data, row_dict):
@@ -49,11 +55,13 @@ def convert_data_to_index(string_data, row_dict):
 def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
        
     # Split by HADM_IDS
-    train_set = df[df.HADM_ID.isin(train_ids.HADM_ID)]
-    val_set = df[df.HADM_ID.isin(val_ids.HADM_ID)]
-    test_set = df[df.HADM_ID.isin(test_ids.HADM_ID)]
-    
-    print('\nData Split:',train_set.shape[0], val_set.shape[0],test_set.shape[0],'\n')
+    train_set = df.query("HADM_ID.isin(@train_ids)")
+    val_set = df.query("HADM_ID.isin(@val_ids)")
+    test_set = df.query("HADM_ID.isin(@test_ids)")
+
+    print(f''''
+    Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
+    ''')
     
     # Call model_args class
     model_args = fun.model_args()
@@ -75,16 +83,18 @@ def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
 def split_LR(df, mlb, all_icds, train_ids, val_ids, test_ids):
     
     # Split by HADM_IDS
-    train_set = df[df.HADM_ID.isin(train_ids.HADM_ID)]
-    val_set = df[df.HADM_ID.isin(val_ids.HADM_ID)]
-    test_set = df[df.HADM_ID.isin(test_ids.HADM_ID)]
+    train_set = df.query("HADM_ID.isin(@train_ids)")
+    val_set = df.query("HADM_ID.isin(@val_ids)")
+    test_set = df.query("HADM_ID.isin(@test_ids)")
     
-    print('\nData Split:',train_set.shape[0], val_set.shape[0],test_set.shape[0],'\n')
+    print(f''''
+    Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
+    ''')
     
     # Call model_args class
     model_args = fun.model_args()
     
-    # Train
+    # Set inputs and targets
     model_args.x[0] = train_set['clean_text'].to_list()
     model_args.y[0] = mlb.transform(train_set['ICD9_CODE'])
 
@@ -102,7 +112,7 @@ def split_LR(df, mlb, all_icds, train_ids, val_ids, test_ids):
 def get_model(model_args, embedding_matrix = None, args = None):
 
     if args.MODEL_NAME == 'lr':
-        return models.lr_model(model_args,args)
+        return models.lr_model(model_args, args)
 
     elif args.MODEL_NAME == 'cnn':
         return models.cnn_model(model_args, embedding_matrix, args)
@@ -126,67 +136,71 @@ def load_model_custom(model_args, embedding_matrix=None, args=None):
 
         return model
 
-def load_w2v_emb(w2v_vec_size=W2V_SIZE, dataset='MIMIC', add_descriptions='', verbose=0):
+def load_w2v_emb(w2v_vec_size=W2V_SIZE, dataset='MIMIC', verbose=0):
     """
     Function to load trained w2v embedding matrix and correspondent row dictionary.
 
     Parameters
     -----
-    w2v_vec_size: vector dimension used for Word2Vec training.\n
-    dataset: dataset where samples come from.\n
+    w2v_vec_size: vector dimension used for Word2Vec training.
+    dataset: dataset where samples come from.
     add_descriptions (optional): additional descriptions used when saving x, y and embedding matrix.
     
     Outputs
     -----
-    W2V embedding matrix and dictionary to link tokens to matrix index.\n
+    W2V embedding matrix and dictionary to link tokens to matrix index.
     """
 
     # Load embedding matrix
-    with open(W2V_DIR + dataset + '_emb_train_vec' + str(w2v_vec_size) + str(add_descriptions) + '.pkl','rb') as file:
+    with open(W2V_DIR + dataset + 'f_emb_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_embedding_matrix = pickle.load(file)
     
     # Load row_dict
-    with open(W2V_DIR + dataset + '_dict_train_vec' + str(w2v_vec_size) + str(add_descriptions) + '.pkl','rb') as file:
+    with open(W2V_DIR + dataset + 'f_dict_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_row_dict = pickle.load(file)
 
     if verbose:
-        print('Dataset:', dataset)
-        print('Embedding matrix shape:', w2v_embedding_matrix.shape)
+        print(f'''
+            Dataset: {dataset}
+            Embedding matrix shape: {w2v_embedding_matrix}
+        ''')
 
     return w2v_embedding_matrix, w2v_row_dict
 
     
-def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', add_descriptions='', verbose=0):
+def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
     """
     Function to load processed x (truncated, padded, converted to indexes for a given embedding matrix) and y (converted to multi-hot encoding of classes) data.
 
     Parameters
     -----
-    max_words: fixed-length input of preprocessed samples.\n
-    dataset: dataset where samples come from.\n
+    max_words: fixed-length input of preprocessed samples.
+    dataset: dataset where samples come from.
     add_descriptions (optional): additional descriptions used when saving x, y and embedding matrix.
 
     Outputs
     -----
-    Preprocessed x and y, and MultilabelBinarizer instance to allow multi-hot<->ICDs conversion.\n
+    Preprocessed x and y, and MultilabelBinarizer instance to allow multi-hot<->ICDs conversion.
     """
 
     # Load x
-    with open(W2V_DIR + dataset + '_x' + '_pad' + str(max_words) + str(add_descriptions) + '.pkl','rb') as file:
+    with open(W2V_DIR + dataset + f'_x_pad{max_words}.pkl','rb') as file:
         x = pickle.load(file)
     
     # Load y
-    with open(W2V_DIR + dataset + '_y' + '.pkl','rb') as file:
+    with open(W2V_DIR + dataset + '_y.pkl','rb') as file:
         y = pickle.load(file)
 
     # Load mlb
-    with open(W2V_DIR + dataset + '_mlb' + '.pkl','rb') as file:
+    with open(W2V_DIR + dataset + '_mlb.pkl','rb') as file:
         mlb = pickle.load(file)
 
     if verbose:
-        print('Train set: X:', x[0].shape, 'Y:', y[0].shape)
-        print('Val set: X:', x[1].shape, 'Y:', y[1].shape)
-        print('Test set: X:', x[2].shape, 'Y:', y[2].shape)
+        print(f'''
+                Train set: X: {x[0].shape}, Y: {y[0].shape}
+                Val set: X: {x[1].shape}, Y: {y[1].shape}
+                Test set: X: {x[2].shape}, Y: {y[2].shape}
+            ''')
 
     return x, y, mlb
 

@@ -3,6 +3,7 @@
 import argparse
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
+import pickle
 
 from constants import SAVE_DIR, W2V_SIZE, MAX_LENGTH
 import utils
@@ -64,9 +65,11 @@ def main(args):
     model_args.predict(custom_model = best_model)
 
     # Compute metrics @ best threshold
-    print('\n--------------------\nMetrics @ %.2f for best epoch:\n' %model_args.best_t)
+    print(f'''
+        --------------------
+        Metrics @ {model_args.best_t:.2f} for best epoch:
+        ''')
     model_args.metrics(threshold = model_args.best_t)
-    print('\n--------------------\n')
 
     # Save args to correctly load weights (this will go when I manage to correcly save models)
     with open(SAVE_DIR + 'args.pkl', 'wb') as file:

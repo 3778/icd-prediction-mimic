@@ -27,13 +27,12 @@ def main(args):
     all_icds = hist.index.tolist()
 
     # Load splits
-    train_ids = pd.read_csv(DATA_DIR + 'train'+'_full_hadm_ids.csv',header=None, names=['HADM_ID'])
-    val_ids = pd.read_csv(DATA_DIR + 'dev'+'_full_hadm_ids.csv',header=None, names=['HADM_ID']) 
-    test_ids = pd.read_csv(DATA_DIR + 'test'+'_full_hadm_ids.csv',header=None,names=['HADM_ID']) 
+    train_ids = utils.load_ids_from_txt(DATA_DIR + 'train_full_hadm_ids.csv')
+    val_ids = utils.load_ids_from_txt(DATA_DIR + 'dev_full_hadm_ids.csv')
+    test_ids = utils.load_ids_from_txt(DATA_DIR + 'test_full_hadm_ids.csv')
 
     # Fit multi-hot encoder
-    mlb = MultiLabelBinarizer(all_icds)
-    mlb.fit(df['ICD9_CODE'])
+    mlb = MultiLabelBinarizer(all_icds).fit(df['ICD9_CODE'])
 
     # Apply preprocessing to free text
     df['clean_text'] = df['TEXT'].apply(utils.preprocessor_tfidf)
@@ -83,11 +82,13 @@ def main(args):
         model_args.predict(custom_model = best_model)
 
         # Compute metrics @ best threshold
-        print('\n--------------------\nMetrics @ %.2f for best epoch:\n' %model_args.best_t)
+        print(f'''
+            --------------------
+            Metrics @ {model_args.best_t:.2f} for best epoch:
+            ''')
         model_args.metrics(threshold = model_args.best_t)
-        print('\n--------------------\n')
 
-        # Save args to correctly load weights (this will go when I manage to correcly save models)
+        # Save args to correctly load weights (this will go when I manage to correctly save models)
         with open(SAVE_DIR + '_args.pkl', 'wb') as file:
             pickle.dump(args, file)
 
@@ -100,8 +101,7 @@ def main(args):
         ks = np.linspace(1,20,20, dtype=int)
         
         # Select most occuring ICDs in train set
-        most_occ_train = utils.make_icds_histogram(df[df.HADM_ID.isin(train_ids.HADM_ID)]).index.tolist()
-
+        most_occ_train = utils.make_icds_histogram(df.query("HADM_ID.isin(@train_ids)")).index.tolist()
 
         # Sweep k for val set
         for k in ks:
@@ -114,14 +114,18 @@ def main(args):
             model_args.y_pred[1] = y_pred[:model_args.y[1].shape[0]]
 
             # Compute metrics
-            print('\nMetrics when predicting the %d most occurring ICD codes:' %k)
+            print(f'''
+            Metrics when predicting the {k} most occurring ICD codes:
+            ''')
             model_args.metrics([0,1,0])
 
             # Store F1 val
             f1_val.append(model_args.f1_score[1])
         
         best_k = ks[np.argmax(np.ravel(f1_val))]
-        print('\n\nBest F1 val micro score =',max(f1_val),'[',best_k,'ICDs predicted ]')
+        print(f'''
+        Best F1 val micro score = {max(f1_val)} [{best_k} ICDs predicted]
+        ''')
 
         # Recompute predictions of best value
 
@@ -136,7 +140,9 @@ def main(args):
         model_args.y_pred[2] = y_pred[:model_args.y[2].shape[0]]
 
         # Compute metrics
-        print('\n-----------------\nMetrics when predicting the %d most occurring ICD codes:\n' %best_k)
+        print(f'''-----------------
+        Metrics when predicting the %d most occurring ICD codes: {best_k}
+        ''')
         model_args.metrics()
 
 

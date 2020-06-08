@@ -22,8 +22,8 @@ def main(args):
     # Load DataFrame
     df = pd.read_pickle(DATA_DIR + 'mimic3_data.pkl')
 
-    # Load splits
-    train_ids = pd.read_csv(DATA_DIR + 'train' + '_full_hadm_ids.csv',header=None, names=['HADM_ID'])
+    # Load train split
+    train_ids = utils.load_ids_from_txt(DATA_DIR + 'train_full_hadm_ids.csv')
 
 
     ### 2. Training Word2Vec
@@ -34,20 +34,19 @@ def main(args):
                       .pipe(utils.preprocessor))
 
     # Instantiate model
-    model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5, workers=args.workers, sg=args.sg, seed=3778)
+    model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5,
+                         workers=args.workers, sg=args.sg, seed=3778)
 
     # Build vocab over train samples
     model_w2v.build_vocab(token_review)
 
     # We pass through the data set multiple times, shuffling the training reviews each time to improve accuracy.
-    Idx=list(range(len(token_review)))
 
     t0 = time()
-    for epoch in range(5):
-        random.shuffle(Idx)
-        perm_sentences = [token_review[i] for i in Idx]
-        model_w2v.train(perm_sentences,total_examples = model_w2v.corpus_count, epochs = model_w2v.epochs)
-        #print(epoch)
+    for _ in range(5):
+        model_w2v.train(np.random.permutation(token_review), 
+                        total_examples=model_w2v.corpus_count, 
+                        epochs=model_w2v.epochs)
     elapsed=time() - t0
     print(f'Time taken for Word2vec training: {elapsed} seconds.')
 
