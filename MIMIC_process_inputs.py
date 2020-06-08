@@ -33,13 +33,11 @@ wv_embedding_matrix, row_dict = utils.load_w2v_emb()
 ## 3. Preprocess, pad and truncate
 
 # Apply preprocessing
-df['clean_text'] = df['TEXT'].apply(utils.preprocessor_word2vec)
-
-# Convert words to correspondent rows in embedding matrix
-df['int_seq'] = df['clean_text'].apply(lambda x: utils.convert_data_to_index(x, row_dict))
-
-# Pad/truncate to max_words length
-df['int_seq'] = df['int_seq'].apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',maxlen = MAX_LENGTH, value = row_dict['_padding_'])))
+df['int_seq'] = (df['TEXT']
+                .pipe(utils.preprocessor_word2vec)
+                .apply(lambda x: utils.convert_data_to_index(x, row_dict))
+                .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
+                                            maxlen = MAX_LENGTH, value = row_dict['_padding_']))))
 
 
 ## 3. Split data

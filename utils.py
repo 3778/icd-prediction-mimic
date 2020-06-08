@@ -17,28 +17,28 @@ def load_ids_from_txt(filepath):
 
 def preprocessor(text_series):
     return (text_series
-            .str.sub('<[^>]*>', '')
+            .str.replace('<[^>]*>', '')
             .str.lower()
-            .str.sub('[\W]+', ' ')
+            .str.replace('[\W]+', ' ')
             .str.split())
 
 
 def preprocessor_tfidf(text_series):
     return (text_series
-            .str.sub('\[\*\*[^\]]*\*\*\]','')
-            .str.sub('<[^>]*>', '')
-            .str.sub('[\W]+', ' ')
+            .str.replace('\[\*\*[^\]]*\*\*\]','')
+            .str.replace('<[^>]*>', '')
+            .str.replace('[\W]+', ' ')
             .str.lower()
-            .str.sub(' \d+', ' '))
+            .str.replace(' \d+', ' '))
 
 
 def preprocessor_word2vec(text_series):
     return (text_series
-            .str.sub('\[\*\*[^\]]*\*\*\]','')
-            .str.sub('<[^>]*>', '')
-            .str.sub('[\W]+', ' ')
+            .str.replace('\[\*\*[^\]]*\*\*\]','')
+            .str.replace('<[^>]*>', '')
+            .str.replace('[\W]+', ' ')
             .str.lower()
-            .str.sub(' \d+', ' ')
+            .str.replace(' \d+', ' ')
             .str.split())
 
 
@@ -152,11 +152,11 @@ def load_w2v_emb(w2v_vec_size=W2V_SIZE, dataset='MIMIC', verbose=0):
     """
 
     # Load embedding matrix
-    with open(W2V_DIR + dataset + 'f_emb_train_vec{w2v_vec_size}.pkl','rb') as file:
+    with open(W2V_DIR + dataset + f'_emb_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_embedding_matrix = pickle.load(file)
     
     # Load row_dict
-    with open(W2V_DIR + dataset + 'f_dict_train_vec{w2v_vec_size}.pkl','rb') as file:
+    with open(W2V_DIR + dataset + f'_dict_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_row_dict = pickle.load(file)
 
     if verbose:
