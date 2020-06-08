@@ -82,13 +82,10 @@ def main(args):
 
     # Save embedding layer and row dict
 
-    matrix_str = W2V_DIR + 'MIMIC_emb_train' + '_vec' + str(W2V_SIZE) + '.pkl'
-    dict_str = W2V_DIR + 'MIMIC_dict_train' + '_vec' + str(W2V_SIZE) + '.pkl'
-
-    with open(matrix_str,'wb') as file:
+    with open(W2V_DIR + f'MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
         pickle.dump(wv_embedding_matrix, file)
         
-    with open(dict_str,'wb') as file:
+    with open(W2V_DIR + f'MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
         pickle.dump(row_dict, file)
 
     print(f'''
