@@ -11,11 +11,12 @@ def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()
 
 
-def preprocessor(text):
-    text = re.sub('<[^>]*>', '', text)
-    text = re.sub('[\W]+', ' ', text.lower())
-    text = text.split()
-    return text
+def preprocessor(text_series):
+    return (text_series
+            .str.sub('<[^>]*>', '')
+            .str.lower()
+            .str.sub('[\W]+', ' ')
+            .str.split())
 
 
 def preprocessor_tfidf(text):
@@ -188,7 +189,6 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', add_descriptions
         print('Test set: X:', x[2].shape, 'Y:', y[2].shape)
 
     return x, y, mlb
-
 
 
 
