@@ -49,7 +49,7 @@ def main(args):
         model_w2v.train(perm_sentences,total_examples = model_w2v.corpus_count, epochs = model_w2v.epochs)
         #print(epoch)
     elapsed=time() - t0
-    print('Time taken for Word2vec training: ', elapsed, 'seconds.')
+    print(f'Time taken for Word2vec training: {elapsed} seconds.')
 
 
     # Save Word2Vec model
