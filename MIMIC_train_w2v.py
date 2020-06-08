@@ -91,9 +91,10 @@ def main(args):
     with open(dict_str,'wb') as file:
         pickle.dump(row_dict, file)
 
-    print('W2V embedding matrix shape:', wv_embedding_matrix.shape)
-
-    print('\nWord2Vec embeddings saved! Now run MIMIC_process_inputs.py.\n')
+    print(f'''
+    W2V embedding matrix shape: {wv_embedding_matrix.shape}
+    Word2Vec embeddings saved! Now run MIMIC_process_inputs.py.
+    ''')
 
 
 ## Parser
