@@ -29,7 +29,9 @@ def main(args):
     ### 2. Training Word2Vec
 
     # Get tokens of train set
-    token_review = list(df[df.HADM_ID.isin(train_ids.HADM_ID)].TEXT.apply(utils.preprocessor))
+    token_review = (df.query("HADM_ID.isin(@train_ids)")
+                      ["TEXT"]
+                      .pipe(utils.preprocessor))
 
     # Instantiate model
     model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5, workers=args.workers, sg=args.sg, seed=3778)
