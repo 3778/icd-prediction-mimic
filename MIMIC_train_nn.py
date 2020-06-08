@@ -66,9 +66,9 @@ def main(args):
 
     # Compute metrics @ best threshold
     print(f'''
-        --------------------
-        Metrics @ {model_args.best_t:.2f} for best epoch:
-        ''')
+    --------------------
+    Metrics @ {model_args.best_t:.2f} for best epoch:
+    ''')
     model_args.metrics(threshold = model_args.best_t)
 
     # Save args to correctly load weights (this will go when I manage to correcly save models)

@@ -161,8 +161,8 @@ def load_w2v_emb(w2v_vec_size=W2V_SIZE, dataset='MIMIC', verbose=0):
 
     if verbose:
         print(f'''
-            Dataset: {dataset}
-            Embedding matrix shape: {w2v_embedding_matrix}
+        Dataset: {dataset}
+        Embedding matrix shape: {w2v_embedding_matrix.shape[0]}
         ''')
 
     return w2v_embedding_matrix, w2v_row_dict
@@ -196,11 +196,11 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         mlb = pickle.load(file)
 
     if verbose:
-        print(f'''
-                Train set: X: {x[0].shape}, Y: {y[0].shape}
-                Val set: X: {x[1].shape}, Y: {y[1].shape}
-                Test set: X: {x[2].shape}, Y: {y[2].shape}
-            ''')
+        print(f"""
+        Train set: X: {x[0].shape}, Y: {y[0].shape}
+        Val set: X: {x[1].shape}, Y: {y[1].shape}
+        Test set: X: {x[2].shape}, Y: {y[2].shape}
+        """)
 
     return x, y, mlb
 
