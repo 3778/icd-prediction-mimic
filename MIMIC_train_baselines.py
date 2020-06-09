@@ -38,7 +38,7 @@ def main(args):
     df['clean_text'] = df['TEXT'].apply(utils.preprocessor_tfidf)
 
     # Split
-    model_args = utils.split_LR(df, mlb, all_icds, train_ids, val_ids, test_ids)
+    model_args = utils.split(df, mlb, all_icds, train_ids, val_ids, test_ids, to_array=False)
 
     if args.MODEL_NAME=='lr':
 

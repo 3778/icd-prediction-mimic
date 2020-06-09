@@ -46,56 +46,33 @@ def convert_data_to_index(string_data, row_dict):
     return [row_dict.get(word, row_dict['_unkown_']) for word in string_data]
 
 
-def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
+def split(df, mlb, all_icds, train_ids, val_ids, test_ids, to_array=True):
+
+    assert not np.in1d(train_ids, val_ids).any()
+    assert not np.in1d(train_ids, test_ids).any()
+    assert not np.in1d(test_ids, val_ids).any()
        
     # Split by HADM_IDS
     train_set = df.query("HADM_ID.isin(@train_ids)")
     val_set = df.query("HADM_ID.isin(@val_ids)")
     test_set = df.query("HADM_ID.isin(@test_ids)")
-assert not np.in1d(train_ids, val_ids).any()
-assert not np.in1d(train_ids, test_ids).any()
-assert not np.in1d(test_ids, val_ids).any()
-    print(f''''
+
+    print(f'''
     Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
     ''')
     
     x = []
     y = []
     for subset in [train_set, val_set, test_set]:
-        x.append(np.vstack(subset['int_seq'].to_list())
-        y.append(mlb.transform(subset['ICD9_CODE'])
+        if to_array:
+            x.append(np.vstack(subset['int_seq'].to_list())) # Change this
+        else: 
+            x.append(subset['clean_text'].to_list())
+
+        y.append(mlb.transform(subset['ICD9_CODE']))
         
     # Call model_args class
     model_args = fun.model_args(x,y)
-    
-    
-    return model_args
-
-def split_LR(df, mlb, all_icds, train_ids, val_ids, test_ids):
-    
-    # Split by HADM_IDS
-    train_set = df.query("HADM_ID.isin(@train_ids)")
-    val_set = df.query("HADM_ID.isin(@val_ids)")
-    test_set = df.query("HADM_ID.isin(@test_ids)")
-    
-    print(f''''
-    Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
-    ''')
-    
-    # Call model_args class
-    model_args = fun.model_args()
-    
-    # Set inputs and targets
-    model_args.x[0] = train_set['clean_text'].to_list()
-    model_args.y[0] = mlb.transform(train_set['ICD9_CODE'])
-
-    # Val
-    model_args.x[1] = val_set['clean_text'].to_list()
-    model_args.y[1] = mlb.transform(val_set['ICD9_CODE'])
-
-    #Test
-    model_args.x[2] = test_set['clean_text'].to_list()
-    model_args.y[2] = mlb.transform(test_set['ICD9_CODE'])
     
     return model_args
 
@@ -118,7 +95,7 @@ def get_model(model_args, embedding_matrix = None, args = None):
 def load_model_custom(model_args, embedding_matrix=None, args=None):
 
     if args == None:
-        with open(SAVE_DIR + 'args.pkl','rb') as file:
+        with open(f'{SAVE_DIR}args.pkl','rb') as file:
             args = pickle.load(file)
 
     else:
@@ -143,11 +120,11 @@ def load_w2v_emb(w2v_vec_size=W2V_SIZE, dataset='MIMIC', verbose=0):
     """
 
     # Load embedding matrix
-    with open(W2V_DIR + dataset + f'_emb_train_vec{w2v_vec_size}.pkl','rb') as file:
+    with open(f'{W2V_DIR}{dataset}_emb_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_embedding_matrix = pickle.load(file)
     
     # Load row_dict
-    with open(W2V_DIR + dataset + f'_dict_train_vec{w2v_vec_size}.pkl','rb') as file:
+    with open(f'{W2V_DIR}{dataset}_dict_train_vec{w2v_vec_size}.pkl','rb') as file:
         w2v_row_dict = pickle.load(file)
 
     if verbose:
@@ -179,11 +156,11 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         x = pickle.load(file)
     
     # Load y
-    with open(W2V_DIR + dataset + '_y.pkl','rb') as file:
+    with open(f'{W2V_DIR}{dataset}_y.pkl','rb') as file:
         y = pickle.load(file)
 
     # Load mlb
-    with open(W2V_DIR + dataset + '_mlb.pkl','rb') as file:
+    with open(f'{W2V_DIR}{dataset}_mlb.pkl','rb') as file:
         mlb = pickle.load(file)
 
     if verbose:

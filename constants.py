@@ -19,7 +19,7 @@ MAX_LENGTH = 2000
 DATA_DIR = 'data/'
 
 # Path to save Word2Vec embeddings 
-W2V_DIR = 'models/w2v'
+W2V_DIR = 'models/w2v/'
 
 # Path to save trained models
 SAVE_DIR = 'models/'
