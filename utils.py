@@ -175,7 +175,7 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
     """
 
     # Load x
-    with open(W2V_DIR + dataset + f'_x_pad{max_words}.pkl','rb') as file:
+    with open(f'{W2V_DIR}{dataset}_x_pad{max_words}.pkl','rb') as file:
         x = pickle.load(file)
     
     # Load y
