@@ -59,20 +59,15 @@ assert not np.in1d(test_ids, val_ids).any()
     Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
     ''')
     
+    x = []
+    y = []
+    for subset in [train_set, val_set, test_set]:
+        x.append(np.vstack(subset['int_seq'].to_list())
+        y.append(mlb.transform(subset['ICD9_CODE'])
+        
     # Call model_args class
-    model_args = fun.model_args()
+    model_args = fun.model_args(x,y)
     
-    # Train
-    model_args.x[0] = np.vstack(train_set['int_seq'].to_list())
-    model_args.y[0] = mlb.transform(train_set['ICD9_CODE'])
-
-    # Val
-    model_args.x[1] = np.vstack(val_set['int_seq'].to_list())
-    model_args.y[1] = mlb.transform(val_set['ICD9_CODE'])
-
-    #Test
-    model_args.x[2] = np.vstack(test_set['int_seq'].to_list())
-    model_args.y[2] = mlb.transform(test_set['ICD9_CODE'])
     
     return model_args
 
@@ -199,4 +194,3 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         """)
 
     return x, y, mlb
-
