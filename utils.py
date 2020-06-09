@@ -52,7 +52,9 @@ def split(df, mlb, all_icds, train_ids, val_ids, test_ids):
     train_set = df.query("HADM_ID.isin(@train_ids)")
     val_set = df.query("HADM_ID.isin(@val_ids)")
     test_set = df.query("HADM_ID.isin(@test_ids)")
-
+assert not np.in1d(train_ids, val_ids).any()
+assert not np.in1d(train_ids, test_ids).any()
+assert not np.in1d(test_ids, val_ids).any()
     print(f''''
     Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
     ''')
@@ -197,5 +199,4 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         """)
 
     return x, y, mlb
-
 
