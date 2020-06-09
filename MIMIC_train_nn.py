@@ -72,7 +72,7 @@ def main(args):
     model_args.metrics(threshold = model_args.best_t)
 
     # Save args to correctly load weights (this will go when I manage to correcly save models)
-    with open(SAVE_DIR + 'args.pkl', 'wb') as file:
+    with open(f'{SAVE_DIR}args.pkl', 'wb') as file:
         pickle.dump(args, file)
 
 

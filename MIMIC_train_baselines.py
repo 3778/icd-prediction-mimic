@@ -20,16 +20,16 @@ import utils
 def main(args):
 
     # Load DataFrame
-    df = pd.read_pickle(DATA_DIR + 'mimic3_data.pkl')
+    df = pd.read_pickle(f'{DATA_DIR}mimic3_data.pkl')
 
     # Get ICD list
     hist = utils.make_icds_histogram(df)
     all_icds = hist.index.tolist()
 
     # Load splits
-    train_ids = utils.load_ids_from_txt(DATA_DIR + 'train_full_hadm_ids.csv')
-    val_ids = utils.load_ids_from_txt(DATA_DIR + 'dev_full_hadm_ids.csv')
-    test_ids = utils.load_ids_from_txt(DATA_DIR + 'test_full_hadm_ids.csv')
+    train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
+    val_ids = utils.load_ids_from_txt(f'{DATA_DIR}dev_full_hadm_ids.csv')
+    test_ids = utils.load_ids_from_txt(f'{DATA_DIR}test_full_hadm_ids.csv')
 
     # Fit multi-hot encoder
     mlb = MultiLabelBinarizer(all_icds).fit(df['ICD9_CODE'])
@@ -89,7 +89,7 @@ def main(args):
         model_args.metrics(threshold = model_args.best_t)
 
         # Save args to correctly load weights (this will go when I manage to correctly save models)
-        with open(SAVE_DIR + '_args.pkl', 'wb') as file:
+        with open(f'{SAVE_DIR}_args.pkl', 'wb') as file:
             pickle.dump(args, file)
 
 

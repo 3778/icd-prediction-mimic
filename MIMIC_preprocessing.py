@@ -9,13 +9,13 @@ import pandas as pd
 from constants import DATA_DIR
 
 
-df_text = (pd.read_csv(DATA_DIR + 'NOTEEVENTS.csv.gz')
+df_text = (pd.read_csv(f'{DATA_DIR}NOTEEVENTS.csv.gz')
              .query("CATEGORY == 'Discharge summary')
              .drop_duplicates('TEXT')
              .drop_duplicates('HADM_ID')
              [['SUBJECT_ID','HADM_ID','TEXT']])
 
-df_icds = (pd.read_csv(DATA_DIR + 'DIAGNOSES_ICD.csv.gz')
+df_icds = (pd.read_csv(f'{DATA_DIR}DIAGNOSES_ICD.csv.gz')
              .dropna()
              .groupby('HADM_ID')
              ['ICD9_CODE']
@@ -24,7 +24,7 @@ df_icds = (pd.read_csv(DATA_DIR + 'DIAGNOSES_ICD.csv.gz')
 
 df_mimic = pd.merge(df_icds,df_text,on='HADM_ID',how='inner')
 
-pd.to_pickle(df_mimic, DATA_DIR + 'mimic3_data.pkl')
+pd.to_pickle(df_mimic, f'{DATA_DIR}mimic3_data.pkl')
 
 
 print(f'''

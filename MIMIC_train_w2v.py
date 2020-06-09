@@ -15,12 +15,14 @@ nltk.download('stopwords')
 from constants import DATA_DIR, W2V_DIR, W2V_SIZE
 import utils
 
+
+
 def main(args):
 
     ### 1. Load MIMIC-III preprocessed data
 
     # Load DataFrame
-    df = pd.read_pickle(DATA_DIR + 'mimic3_data.pkl')
+    df = pd.read_pickle(f'{DATA_DIR}mimic3_data.pkl')
 
     # Load train split
     train_ids = utils.load_ids_from_txt(DATA_DIR + 'train_full_hadm_ids.csv')
@@ -52,7 +54,7 @@ def main(args):
 
 
     # Save Word2Vec model
-    model_w2v.save(W2V_DIR + 'w2v_model.model')
+    model_w2v.save(f'{W2V_DIR}w2v_model.model')
 
     ### 3. Create Embedding Layer
 
@@ -81,10 +83,10 @@ def main(args):
 
     # Save embedding layer and row dict
 
-    with open(W2V_DIR + f'MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+    with open(f'{W2V_DIR}MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
         pickle.dump(wv_embedding_matrix, file)
         
-    with open(W2V_DIR + f'MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+    with open(f'{W2V_DIR}MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
         pickle.dump(row_dict, file)
 
     print(f'''

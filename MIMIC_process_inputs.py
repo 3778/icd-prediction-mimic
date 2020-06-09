@@ -14,16 +14,16 @@ import utils
 ## 1. Load MIMIC-III preprocessed data
 
 # Load DataFrame
-df = pd.read_pickle(DATA_DIR + 'mimic3_data.pkl')
+df = pd.read_pickle(f'{DATA_DIR}mimic3_data.pkl')
 
 # Get ICD list
 hist = utils.make_icds_histogram(df)
 all_icds = hist.index.tolist()
 
 # Load splits
-train_ids = utils.load_ids_from_txt(DATA_DIR + 'train_full_hadm_ids.csv')
-val_ids = utils.load_ids_from_txt(DATA_DIR + 'dev_full_hadm_ids.csv')
-test_ids = utils.load_ids_from_txt(DATA_DIR + 'test_full_hadm_ids.csv')
+train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
+val_ids = utils.load_ids_from_txt(f'{DATA_DIR}dev_full_hadm_ids.csv')
+test_ids = utils.load_ids_from_txt(f'{DATA_DIR}test_full_hadm_ids.csv')
 
 ## 2. Load Embedding 
 
@@ -50,13 +50,13 @@ model_args = utils.split(df, mlb, all_icds, train_ids, val_ids, test_ids)
 
 ## 4. Save processed and splited data
 
-with open(W2V_DIR + f'MIMIC_x_pad{MAX_LENGTH}.pkl','wb') as file:
+with open(f'{W2V_DIR}MIMIC_x_pad{MAX_LENGTH}.pkl','wb') as file:
     pickle.dump(model_args.x, file)
 
-with open(W2V_DIR + 'MIMIC_y.pkl','wb') as file:
+with open(f'{W2V_DIR}MIMIC_y.pkl','wb') as file:
     pickle.dump(model_args.y, file)
 
-with open(W2V_DIR + 'MIMIC_mlb.pkl','wb') as file:
+with open(f'{W2V_DIR}MIMIC_mlb.pkl','wb') as file:
     pickle.dump(mlb, file)
 
 
