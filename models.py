@@ -159,3 +159,93 @@ def cnn_att_model(model_args, embedding_matrix, args):
     
     return model_args.model
 
+##########################
+
+class LR_Model:
+    
+    def __init__(self,args):
+        self.args = args
+
+    def lr_model(self, input_shape, output_shape):
+
+        if not self.args.lr: ## how to instantiate default values
+            self.args.lr = 0.1
+            
+        # Create LR
+        inputs = Input(shape=(input_shape,))
+
+        outputs = Dense(output_shape, activation='sigmoid')(inputs)
+
+        model = Model(inputs, outputs)
+        model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr))
+            
+        return model
+    
+
+    def fit(self, X, y, validation_data=None, callbacks=None):
+
+        self.model = self.lr_model(X.shape[1], y.shape[1])
+
+        self.model.fit(X, y, validation_data=validation_data, 
+                       epochs=self.args.epochs, batch_size=self.args.batch_size, 
+                       callbacks=callbacks, verbose=self.args.verbose)
+
+    def predict(self, X):
+        return self.model.predict(X)
+
+
+    # def load(path):
+    #     '''Load saved model.'''
+    #     pass
+
+
+class CNN_Model:
+
+    def __init__(self,args):
+        self.args = args
+
+    def cnn_model(self, input_shape, output_shape, embedding_matrix):
+            
+        if not self.args.lr:
+            self.args.lr = 0.001
+
+        # Define model
+        sequence_input = Input(shape=(input_shape,), dtype='int32')
+        
+        embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
+                                    output_dim = embedding_matrix.shape[1], 
+                                    weights = [embedding_matrix], 
+                                    input_length = input_shape,
+                                    trainable = True) (sequence_input)
+        
+        H = Conv1D(self.args.units, self.args.kernel_size, activation=self.args.activation, padding='same')(embedding_layer)
+        H = BatchNormalization() (H)
+        
+        x = GlobalAveragePooling1D()(H)
+        preds = Dense(output_shape, activation='sigmoid')(x)
+        
+        model = Model(sequence_input, preds)
+        model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr),metrics=['acc'])
+        
+        return model
+
+    def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
+    
+        self.model = self.cnn_model(X.shape[1], y.shape[1], embedding_matrix)
+
+        self.model.fit(X, y, validation_data=validation_data, 
+                       epochs=self.args.epochs, batch_size=self.args.batch_size, 
+                       callbacks=callbacks, verbose=self.args.verbose)
+
+    def predict(self, X):
+        return self.model.predict()
+
+
+class GRU_Model:
+    pass
+
+class CNNAtt_Model:
+    pass
+
+
+

@@ -33,3 +33,16 @@ Total unique ICD codes: {df_mimic.ICD9_CODE.explode().nunique()}
 Total samples: {df_mimic.shape[0]}
 Data preprocessed! Now run MIMIC_train_w2v.py to train Word2Vec embeddings or MIMIC_train_baselines.py to train LR or Constant models.
 ''')
+
+
+####################
+
+import datasets
+
+MIMIC = datasets.MIMIC_Dataset()
+
+MIMIC.preprocess()
+
+MIMIC.save()
+
+

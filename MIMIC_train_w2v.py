@@ -8,9 +8,10 @@ import re
 import random
 from time import time
 from gensim.models import Word2Vec
-from nltk.corpus import stopwords as STOP_WORDS
+
 import nltk
 nltk.download('stopwords')
+from nltk.corpus import stopwords as STOP_WORDS
 
 from constants import DATA_DIR, W2V_DIR, W2V_SIZE
 import utils

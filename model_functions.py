@@ -291,3 +291,90 @@ class f1_callback_save_weights(Callback):
     def on_train_end(self, logs={}):
         print('\nBest F1 val at epoch ', self.best_epoch+1,'.\n', sep='')
         return
+
+##########################
+
+class Experiment:
+
+    def __init__(self, X, y, model_class):
+        self.X = X
+        self.y = y
+        self.model_class = model_class
+        
+        # Get sparse y
+        self.y_sparse = csr_matrix(self.y)
+
+        # Make predictions
+        self.y_pred = model_class.predict(self.X)
+
+
+    def metrics(self, threshold = 0.5, k=None, avg='micro', verbose=1):
+
+        def print_res(prec, rec, f1, avg):
+            print(f'-- {avg} metrics --')
+            print('F1\t\t\tPrecision\t\tRecall')
+            print(f'{f1}\t{prec}\t{rec}')
+        
+        # From the chosen subsets:
+        y_pred_bin = np.zeros(self.y_pred.shape)
+
+        # If approach is fixed-k output
+        if k:
+            prob_rank = np.argsort(np.array(self.y_pred))
+
+            for sample in range(len(y_pred_bin)):
+                y_pred_bin[sample][prob_rank[sample][-k:]] = 1
+
+        # Else if approach is threshold-based
+        else:
+            y_pred_bin = self.y_pred > threshold
+
+        # Compute metrics
+        self.precision, self.recall, self.f1_score, _ = precision_recall_fscore_support(self.y_sparse, csr_matrix(y_pred_bin), average=avg,zero_division=0)
+
+        # Print metrics
+        if verbose: print_res(self.precision, self.recall, self.f1_score, avg)
+
+
+    def sweep_thresholds(self, thresholds = np.linspace(0.01,0.5,50), avg='micro', verbose=1):
+    
+        sweep_f1_val = []
+        sweep_prec_val = []
+        sweep_rec_val = []
+        sweep_avg_val_pred = []
+
+        # Sweep through thresholds
+        for thresh in thresholds:
+
+            self.metrics(threshold=thresh, avg=avg, verbose=0)
+
+            sweep_f1_val.append(self.f1_score)
+            sweep_prec_val.append(self.precision)
+            sweep_rec_val.append(self.recall)
+            sweep_avg_val_pred.append(np.mean(sum((self.y_pred>thresh).T)))
+
+        best_t = thresholds[np.argmax(sweep_f1_val)]
+
+
+        self.sweep_results = {'thresholds': thresholds,
+                                'f1_val': sweep_f1_val,
+                                'prec_val': sweep_prec_val,
+                                'rec_val': sweep_rec_val,
+                                'avg_val_pred': sweep_avg_val_pred,
+                                'best_f1_val': self.f1_score,
+                                'best_threshold': best_t,
+                                }
+
+        if verbose: 
+            print(f'''
+            Best Threshold: {best_t}
+            ''')
+
+
+    def sweep_k(self):
+        pass
+
+
+
+
+
