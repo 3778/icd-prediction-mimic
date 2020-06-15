@@ -93,11 +93,11 @@ def gru_model(model_args, embedding_matrix, args):
 # Custom layer to generate per-label weights
 class TrainableMatrix(Layer):
     def __init__(self, n_rows, n_cols, **kwargs):
+        super().__init__(**kwargs)
         self.n_rows = n_rows
         self.n_cols = n_cols
-        super(TrainableMatrix, self).__init__()
     def build(self, input_shape):
-        self.U = self.add_weight(shape=(self.n_rows, self.n_cols), initializer='glorot_uniform', trainable=True)
+        self.U = self.add_weight(name='trainmat', shape=(self.n_rows, self.n_cols), initializer='glorot_uniform', trainable=True)
         super(TrainableMatrix, self).build(input_shape)
     def call(self, inputs):
         return self.U
@@ -114,7 +114,7 @@ class TrainableMatrix(Layer):
 # Custom layer to apply a LR for each label and then concatenate predictions
 class Hadamard(Layer):
     def __init__(self, **kwargs):
-        super(Hadamard, self).__init__()
+        super().__init__(**kwargs)
     def build(self, input_shape):
         self.kernel = self.add_weight(name='kernel',
                                       shape=(1,) + tuple([int(a) for a in input_shape[1:]]),

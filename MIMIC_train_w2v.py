@@ -106,3 +106,20 @@ args = parser.parse_args()
 
 # Start 
 main(args)
+
+
+#########################
+
+import datasets
+import feature_extraction as fx
+
+# Load dataset
+mimic = datasets.MIMIC_Dataset()
+mimic.load_preprocessed().split()
+
+# Instantiate embedding
+w2v = fx.W2V(args)
+
+w2v.fit(mimic.x_train)
+
+w2v.save_embedding(dataset_name=mimic.name)

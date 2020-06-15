@@ -375,6 +375,196 @@ class Experiment:
         pass
 
 
+##########
+ 
+class Experiments:
+
+    def __init__(self, y_true, y_pred, args=None)
+        self.y_true = y_true
+        self.y_pred = y_pred
+        self.args = args
+
+    def metrics(self, threshold=0.5, k=None, avg='micro', subsets=None, subsets_names=None, verbose=1)
+
+        def print_res(prec, rec, f1, avg):
+            print(f'-- {avg} metrics --')
+            print('F1\t\t\tPrecision\t\tRecall')
+            print(f'{f1}\t{prec}\t{rec}')
+
+        if subsets == None:
+
+            # Get sparse y
+            self.y_true_sparse = csr_matrix(self.y_true)
+
+            y_pred_bin = np.zeros(self.y_pred.shape)
+
+            # If approach is fixed-k output
+            if k:
+                prob_rank = np.argsort(np.array(self.y_pred))
+
+                for sample in range(len(y_pred_bin)):
+                    y_pred_bin[sample][prob_rank[sample][-k:]] = 1
+
+            # Else if approach is threshold-based
+            else:
+                y_pred_bin = self.y_pred > threshold
+
+            # Compute metrics
+            self.precision, self.recall, self.f1_score, _ = precision_recall_fscore_support(self.y_true_sparse, csr_matrix(y_pred_bin), average=avg,zero_division=0)
+
+            # Print metrics
+            if verbose: print_res(self.precision, self.recall, self.f1_score, avg)
+
+
+        else: # if you passed a list of inputs, e.g. y_true = [y_val, y_test]
+            assert type(subsets) == list, 'You must select subsets on which to compute experiment!'  # change this
+            assert len(subsets) == len(y_true), 'Subsets do not match input list!'
+
+            self.f1_score = np.zeros(len(subsets))
+            self.precision = np.zeros(len(subsets))
+            self.recall = np.zeros(len(subsets))
+
+            # Get sparse representation (faster)
+            self.y_true_sparse = [csr_matrix(self.y_true[i]) for i in range(len(subsets))]
+
+            def print_res(prec, rec, f1, subset, avg):
+                print('--%s %s-- metrics:' %(subset, avg))
+                print('F1\t\t\tPrecision\t\tRecall')
+                print(f1,'\t', prec, '\t',rec, sep='')
+            
+            if subsets_names==None:
+                susbets_names=['Unk']*len(subsets)
+
+            y_pred_bin = [None]*len(subsets)
+            for i in range(len(subsets)):
+
+                # From the chosen subsets:
+                if subsets[i]:
+                    y_pred_bin[i] = np.zeros(self.y_pred[i].shape)
+
+                    # If approach is fixed-k output
+                    if k:
+                        prob_rank = np.argsort(np.array(self.y_pred[i]))
+
+                        for sample in range(len(y_pred_bin[i])):
+                            y_pred_bin[i][sample][prob_rank[sample][-k:]] = 1
+
+                    # Else if approach is threshold-based
+                    else:
+                        y_pred_bin[i]= self.y_pred[i] > threshold
+
+                    # Compute metrics
+                    self.precision[i], self.recall[i], self.f1_score[i], _ = precision_recall_fscore_support(self.y_true_sparse[i], csr_matrix(y_pred_bin[i]), average=avg,zero_division=0)
+
+                    # Print metrics
+                    if verbose: print_res(self.precision[i], self.recall[i], self.f1_score[i], subset[i], avg)
+
+    def sweep_thresholds(self, thresholds = np.linspace(0.01,0.5,50), avg='micro', subset=None, verbose=1):
+
+        sweep_f1 = []
+        sweep_prec = []
+        sweep_rec = []
+        sweep_avg_pred = []
+
+        # Sweep through thresholds
+        for thresh in thresholds:
+            
+            if subset==None:
+                self.metrics(threshold=thresh, avg=avg, verbose=0)
+            else:
+                assert type(subsets) == list and len(subset) == len(self.y_true) and sum(subset)==1, 'Chose a single subset for this experiment!'
+
+            sweep_f1.append(self.f1_score)
+            sweep_prec.append(self.precision)
+            sweep_rec.append(self.recall)
+            sweep_avg_pred.append(np.mean(sum((self.y_pred>thresh).T)))
+
+        best_t = thresholds[np.argmax(sweep_f1)]
+
+
+        self.sweep_results = {'thresholds': thresholds,
+                                'f1': sweep_f1,
+                                'prec': sweep_prec,
+                                'rec': sweep_rec,
+                                'avg_pred': sweep_avg_pred,
+                                'best_f1': self.f1_score,
+                                'best_threshold': best_t,
+                                }
+
+        if verbose: 
+            print(f'''
+            Best Threshold: {best_t}
+            ''')
+
+
+    def sweep_k(slef):
+        pass
 
 
 
+
+class f1_callback_save(Callback):
+    """
+    Callback for use in keras. 
+    Computes f1 @best_threshold in validation set and prints it.
+    Optionally, it can save the best model based on f1_val.
+    If a tensorboard callback is specified, f1_val is stored in its logs.
+    """
+
+    def __init__(self, model, validation_data, tb_callback=None, store_best=True, best_name='best_model', avg='micro'):
+        self.model = model
+        self.x_val = validation_data(0)
+        self.y_val = validation_data(1)
+        self.tb_callback = tb_callback
+        self.avg = avg
+        self.best_f1_val = 0
+        self.store_best = store_best
+        self.best_name = best_name
+
+    # Execute after each epoch    
+    def on_epoch_end(self, epoch, logs={}):
+
+        # Predict and compute f1 val
+        self.y_pred_val = self.model.predict(x_val)
+
+        self.exp = Experiments(self.y_val, self.y_pred_val)
+
+        # sweep thresh
+        self.exp.sweep_thresholds()
+
+        # get metrics of best thresh
+        self.exp.metrics(threshold = self.exp.sweep_results['best_threshold'] )
+
+        print('')
+        
+        # Set items to store in Tensorboard
+        items_to_write={
+            "f1_val": self.exp.f1_score
+        }
+        
+        # Send to Tensorboard logs
+        if self.tb_callback != None:
+            writer = self.tb_callback.writer
+            for name, value in items_to_write.items():
+                summary = tf.summary.Summary()
+                summary_value = summary.value.add()
+                summary_value.simple_value = value
+                summary_value.tag = name
+                writer.add_summary(summary, epoch)
+                writer.flush()  
+
+        # Store best model
+        if self.store_best:
+            if self.exp.f1_score > self.best_f1_val:
+                self.best_model = self.model
+                print('F1 val improved --> storing best model')
+                self.best_f1_val = self.exp.f1_score
+                self.best_epoch = epoch
+                self.best_model.save(self.best_name)
+
+        
+
+    # Execute after last epoch    
+    def on_train_end(self, logs={}):
+        print('\nBest F1 val at epoch ', self.best_epoch+1,'.\n', sep='')
+        return

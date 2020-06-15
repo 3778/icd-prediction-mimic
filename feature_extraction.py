@@ -16,7 +16,7 @@ from nltk.corpus import stopwords as STOP_WORDS
 
 import utils
 
-from constants import W2VDIR, W2V_SIZE, MAX_LENGTH
+from constants import W2V_DIR, W2V_SIZE, MAX_LENGTH
 
 
 
@@ -98,18 +98,10 @@ class W2V:
         for word in words_w2v:
             self.embedding_matrix[self.row_dict[word]][:] = np.array(self.model_w2v.wv[word])
 
-            if args.reset_stopwords: # point stopwords to zeros
+            if self.args.reset_stopwords: # point stopwords to zeros
                 if word in stopwords:
                     self.embedding_matrix[self.row_dict[word]][:] = np.zeros(W2V_SIZE)
 
-
-        # Save embedding layer and row dict
-
-        # with open(f'{W2V_DIR}MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
-        #     pickle.dump(self.embedding_matrix, file)
-            
-        # with open(f'{W2V_DIR}MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
-        #     pickle.dump(self.row_dict, file)
 
         if verbose:
             print(f'''
@@ -117,20 +109,77 @@ class W2V:
             ''')
 
 
-    def transform(self, X): #(save=True?)
+    def transform(self, X=None, dataset=None): #(save=True?)
 
-        # if not self.row_dict, load row_dict
+        def transform_X(X):
+            return (X
+                    .pipe(utils.preprocessor_word2vec)
+                    .apply(utils.convert_data_to_index, row_dict=self.row_dict)
+                    .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
+                                                maxlen = MAX_LENGTH, value = self.row_dict['_padding_']))))
 
-        return (X
-                .pipe(utils.preprocessor_word2vec)
-                .apply(utils.convert_data_to_index, row_dict=self.row_dict)
-                .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
-                                            maxlen = MAX_LENGTH, value = self.row_dict['_padding_']))))
+        if X:
+            return transform_X(X)
+
+        else:
+            self.x_train = transform_X(dataset.x_train)
+            self.x_val = transform_X(dataset.x_val)
+            self.x_test = transform_X(dataset.x_test)
 
         # Save transformed embeddings? (as in MIMIC_process_inputs.py)
 
-    def save(self):
-        pass
+    def save_embedding(self, dataset_name='MIMIC'):
+        # Save embedding layer and row dict
 
-    def load(self):
-        pass
+        with open(f'{W2V_DIR}MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+            pickle.dump(self.embedding_matrix, file)
+
+        with open(f'{W2V_DIR}MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+            pickle.dump(self.row_dict, file)
+
+
+    def load_embedding(self, dataset_name='MIMIC'):
+
+        # Load embedding matrix
+        with open(f'{W2V_DIR}{dataset}_emb_train_vec{W2V_SIZE}.pkl','rb') as file:
+            self.embedding_matrix = pickle.load(file)
+        
+        # Load row_dict
+        with open(f'{W2V_DIR}{dataset}_dict_train_vec{W2V_SIZE}.pkl','rb') as file:
+            self.row_dict = pickle.load(file)
+
+    # def save_processed(self, dataset='MIMIC'):
+
+    #     with open(f'{W2V_DIR}MIMIC_x_pad{MAX_LENGTH}.pkl','wb') as file:
+    #         pickle.dump(model_args.x, file)
+
+    #     with open(f'{W2V_DIR}MIMIC_y.pkl','wb') as file:
+    #         pickle.dump(model_args.y, file)
+
+    #     # with open(f'{W2V_DIR}MIMIC_mlb.pkl','wb') as file:
+    #     #     pickle.dump(mlb, file)
+
+
+    # def load_processed(self, dataset='MIMIC'):
+
+    #     # Load x
+    #     with open(f'{W2V_DIR}{dataset}_x_pad{MAX_LENGTH}.pkl','rb') as file:
+    #         x = pickle.load(file)
+        
+    #     # Load y
+    #     with open(f'{W2V_DIR}{dataset}_y.pkl','rb') as file:
+    #         y = pickle.load(file)
+
+    #     # Load mlb
+    #     with open(f'{W2V_DIR}{dataset}_mlb.pkl','rb') as file:
+    #         mlb = pickle.load(file)
+
+    #     if verbose:
+    #         print(f"""
+    #         Train set: X: {x[0].shape}, Y: {y[0].shape}
+    #         Val set: X: {x[1].shape}, Y: {y[1].shape}
+    #         Test set: X: {x[2].shape}, Y: {y[2].shape}
+    #         """)
+
+    #     self.x_train, self.x_val, self.x_test = x
+    #     self.y_train, self.y_val, self.y_test = y
