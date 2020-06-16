@@ -129,11 +129,10 @@ class W2V:
             self.x_val = np.vstack(transform_X(dataset.x_val).to_list()).tolist()
             self.x_test = np.vstack(transform_X(dataset.x_test).to_list()).tolist()
 
-        # Save transformed embeddings? (as in MIMIC_process_inputs.py)
 
     def save_embedding(self, dataset_name='MIMIC'):
+        
         # Save embedding layer and row dict
-
         with open(f'{W2V_DIR}{dataset_name}_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
             pickle.dump(self.embedding_matrix, file)
 
