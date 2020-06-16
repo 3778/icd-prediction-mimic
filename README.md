@@ -58,7 +58,7 @@ Finally, it computes the threshold-optimized metrics in all subsets.
 Here, the script saves the fitted model, using Tensorflow SavedModel format.
 
 
-#### 6.2. MIMIC_train_nn.py, for CNN, GRU and CNN-Att.
+#### 6.2. Run MIMIC_train_nn.py, for CNN, GRU and CNN-Att.
 
 This script takes the data splits and Word2Vec embeddings, then fits the desired model for the training set.
 After training, it restores the weights of the epoch with best micro F1 in the validation set.
