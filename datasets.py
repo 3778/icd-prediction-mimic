@@ -20,7 +20,7 @@ class MIMIC_Dataset:
             self.df = pickle.load(file) 
 
     def save_preprocessed(self, path=DATA_DIR):
-        pd.to_pickle(self.df, f'{path}mimic3_data.pkl') ######### SAMPLING FOR TEST
+        pd.to_pickle(self.df, f'{path}mimic3_data.pkl')
 
     def preprocess(self, verbose=1):
 

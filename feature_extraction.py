@@ -19,10 +19,10 @@ import utils
 from constants import W2V_DIR, W2V_SIZE, MAX_LENGTH
 
 
+# Set random seed
+random.seed(3778)
 
-# FIX random seed
-
-class TFIDF: # not sure it will handle the pandas objects
+class TFIDF: 
 
     def __init__(self, args):
         self.args = args
@@ -31,7 +31,7 @@ class TFIDF: # not sure it will handle the pandas objects
 
         X = X.pipe(utils.preprocessor_tfidf)
 
-        # Instantiate TF-IDF Transformer (maybe to this in init?)
+        # Instantiate TF-IDF Transformer 
         self.tfidf = TfidfVectorizer(stop_words = STOP_WORDS.words('english'), max_features=self.args.max_features)
 
         self.tfidf.fit(X)
@@ -82,11 +82,6 @@ class W2V:
         elapsed=time() - t0
         if verbose: print(f'Time taken for Word2vec training: {elapsed} seconds.')
 
-
-        # Save Word2Vec model
-        # self.model_w2v.save(f'{W2V_DIR}w2v_model.model') # change this
-
-
         # List all words in embedding
         words_w2v = list(self.model_w2v.wv.vocab.keys())
 
@@ -117,7 +112,7 @@ class W2V:
             ''')
 
 
-    def transform(self, X=None, dataset=None): #(save=True?)
+    def transform(self, X=None, dataset=None):
 
         def transform_X(X):
             return (X
@@ -145,6 +140,10 @@ class W2V:
         with open(f'{W2V_DIR}{dataset_name}_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
             pickle.dump(self.row_dict, file)
 
+        
+        # Save Word2Vec model
+        self.model_w2v.save(f'{W2V_DIR}w2v_model.model')
+
 
     def load_embedding(self, dataset_name='MIMIC'):
 
@@ -156,38 +155,3 @@ class W2V:
         with open(f'{W2V_DIR}{dataset_name}_dict_train_vec{W2V_SIZE}.pkl','rb') as file:
             self.row_dict = pickle.load(file)
 
-    # def save_processed(self, dataset='MIMIC'):
-
-    #     with open(f'{W2V_DIR}MIMIC_x_pad{MAX_LENGTH}.pkl','wb') as file:
-    #         pickle.dump(model_args.x, file)
-
-    #     with open(f'{W2V_DIR}MIMIC_y.pkl','wb') as file:
-    #         pickle.dump(model_args.y, file)
-
-    #     # with open(f'{W2V_DIR}MIMIC_mlb.pkl','wb') as file:
-    #     #     pickle.dump(mlb, file)
-
-
-    # def load_processed(self, dataset='MIMIC'):
-
-    #     # Load x
-    #     with open(f'{W2V_DIR}{dataset}_x_pad{MAX_LENGTH}.pkl','rb') as file:
-    #         x = pickle.load(file)
-        
-    #     # Load y
-    #     with open(f'{W2V_DIR}{dataset}_y.pkl','rb') as file:
-    #         y = pickle.load(file)
-
-    #     # Load mlb
-    #     with open(f'{W2V_DIR}{dataset}_mlb.pkl','rb') as file:
-    #         mlb = pickle.load(file)
-
-    #     if verbose:
-    #         print(f"""
-    #         Train set: X: {x[0].shape}, Y: {y[0].shape}
-    #         Val set: X: {x[1].shape}, Y: {y[1].shape}
-    #         Test set: X: {x[2].shape}, Y: {y[2].shape}
-    #         """)
-
-    #     self.x_train, self.x_val, self.x_test = x
-    #     self.y_train, self.y_val, self.y_test = y

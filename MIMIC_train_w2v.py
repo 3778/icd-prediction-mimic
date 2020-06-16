@@ -11,12 +11,13 @@ def main(args):
     mimic.load_preprocessed()
     mimic.split()
     
-
     # Instantiate embedding
     w2v = fx.W2V(args)
 
+    # Train
     w2v.fit(mimic.x_train)
 
+    # Save embedding matrix
     w2v.save_embedding(dataset_name=mimic.name)
 
     print(f'''
