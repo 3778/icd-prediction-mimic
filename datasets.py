@@ -20,7 +20,7 @@ class MIMIC_Dataset:
             self.df = pickle.load(file) 
 
     def save_preprocessed(self, path=DATA_DIR):
-        pd.to_pickle(self.df.sample(100), f'{path}mimic3_data.pkl') ######### SAMPLING FOR TEST
+        pd.to_pickle(self.df, f'{path}mimic3_data.pkl') ######### SAMPLING FOR TEST
 
     def preprocess(self, verbose=1):
 
@@ -52,8 +52,8 @@ class MIMIC_Dataset:
 
         # Fit multi-hot encoder
         hist = utils.make_icds_histogram(self.df)
-        all_icds = hist.index.tolist()
-        self.mlb = MultiLabelBinarizer(all_icds).fit(self.df['ICD9_CODE'])
+        self.all_icds = hist.index.tolist()
+        self.mlb = MultiLabelBinarizer(self.all_icds).fit(self.df['ICD9_CODE'])
 
         if not hadm_ids: # change this
             train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
@@ -65,6 +65,8 @@ class MIMIC_Dataset:
         assert not np.in1d(hadm_ids[0], hadm_ids[1]).any(), 'Data leakage!'
         assert not np.in1d(hadm_ids[0], hadm_ids[2]).any(), 'Data leakage!'
         assert not np.in1d(hadm_ids[2], hadm_ids[1]).any(), 'Data leakage!'
+
+        self.all_icds_train = utils.make_icds_histogram(self.df.query("HADM_ID.isin(@hadm_ids[0])")).index.tolist()
 
         self.x_train = self.df.query("HADM_ID.isin(@hadm_ids[0])").TEXT
         self.y_train = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[0])").ICD9_CODE).tolist()
