@@ -20,7 +20,9 @@ To install dependencies, run ?
 ### 2. In data/, place the files below:
 	- NOTEEVENTS.csv.gz (from MIMIC-III)
 	- DIAGNOSES_ICD.csv.gz (from MIMIC-III)
-	- *_full_hadm_ids.csv (from [CAML](https://github.com/jamesmullenbach/caml-mimic))
+	- *_full_hadm_ids.csv (from CAML)
+
+Get the hadm_ids.csv files from [CAML](https://github.com/jamesmullenbach/caml-mimic). You will also need access to the [MIMIC-III dataset](https://mimic.physionet.org/gettingstarted/access/).
 	
 ### 3. Run MIMIC_preprocessing.py to select discharge summaries and merge MIMIC-III tables.
 
