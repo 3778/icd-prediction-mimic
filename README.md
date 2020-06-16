@@ -45,9 +45,9 @@ The outputs from this script are:
 - **MIMIC_dict_train_vecW2V_SIZE.pkl**: a dictionary linking words to the respective row indexes in the embedding matrix.
 - **w2v_model.model**: the trained Word2Vec instance.
 
-### 6. Now, any model can be trained and evaluated:
+### 5. Now, any model can be trained and evaluated:
 
-#### 6.1. Run MIMIC_train_baselines.py, for LR and Constant models.
+#### 5.1. Run MIMIC_train_baselines.py, for LR and Constant models.
 
 - For Constant:
 The script computes the `k` most ocurring ICDs in the training set and predicts them to all samples. Nothing is stored here.
@@ -60,7 +60,7 @@ Finally, it computes the threshold-optimized metrics in all subsets.
 Here, the script saves the fitted model, using Tensorflow SavedModel format.
 
 
-#### 6.2. Run MIMIC_train_nn.py, for CNN, GRU and CNN-Att.
+#### 5.2. Run MIMIC_train_nn.py, for CNN, GRU and CNN-Att.
 
 This script takes the data splits and Word2Vec embeddings, then fits the desired model for the training set.
 After training, it restores the weights of the epoch with best micro F1 in the validation set.
@@ -69,7 +69,7 @@ Finally, it computes the threshold-optimized metrics in all subsets.
 The fitted model is stored using Tensorflow SavedModel format.
 
 
-### 7. In /notebooks/, you will find:
+### 6. In /notebooks/, you will find:
 - *MIMIC_overview.ipynb*, where some data analysis from MIMIC-III discharge summaries are provided.
 - *MIMIC_analyze_predictions.ipynb*, where some additional analyses from the predictions of a model can be seen.
 
