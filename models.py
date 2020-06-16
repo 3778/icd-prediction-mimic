@@ -1,6 +1,6 @@
 import tensorflow as tf
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, CuDNNGRU, GlobalAveragePooling1D, BatchNormalization
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization #, CuDNNGRU
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
 
@@ -58,33 +58,33 @@ def cnn_model(model_args, embedding_matrix, args):
 
 ######## GRU MODEL ######## 
 
-def gru_model(model_args, embedding_matrix, args):
+# def gru_model(model_args, embedding_matrix, args):
 
-    # Parameters
-    output_shape = model_args.y[0].shape[1]
+#     # Parameters
+#     output_shape = model_args.y[0].shape[1]
 
-    if not args.lr:
-        args.lr = 8e-4
+#     if not args.lr:
+#         args.lr = 8e-4
 
-    # Build model
-    sequence_input = Input(shape=(model_args.x[0].shape[1],), dtype='int32')
+#     # Build model
+#     sequence_input = Input(shape=(model_args.x[0].shape[1],), dtype='int32')
 
-    embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
-                                output_dim = embedding_matrix.shape[1], 
-                                weights = [embedding_matrix], 
-                                input_length = model_args.x[0].shape[1],
-                                trainable = True) (sequence_input)
+#     embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
+#                                 output_dim = embedding_matrix.shape[1], 
+#                                 weights = [embedding_matrix], 
+#                                 input_length = model_args.x[0].shape[1],
+#                                 trainable = True) (sequence_input)
 
-    x = CuDNNGRU(args.units, return_sequences=True) (embedding_layer)
-    x = BatchNormalization() (x)
-    x = GlobalAveragePooling1D() (x)
+#     x = CuDNNGRU(args.units, return_sequences=True) (embedding_layer)
+#     x = BatchNormalization() (x)
+#     x = GlobalAveragePooling1D() (x)
 
-    outputs = Dense(output_shape, activation='sigmoid') (x)
+#     outputs = Dense(output_shape, activation='sigmoid') (x)
 
-    model_args.model = Model(sequence_input, outputs)
-    model_args.model.compile(loss='binary_crossentropy',optimizer=Adam(args.lr),metrics=['acc'])
+#     model_args.model = Model(sequence_input, outputs)
+#     model_args.model.compile(loss='binary_crossentropy',optimizer=Adam(args.lr),metrics=['acc'])
 
-    return model_args.model
+#     return model_args.model
 
 
 
@@ -161,6 +161,10 @@ def cnn_att_model(model_args, embedding_matrix, args):
 
 ##########################
 
+class CTE_Model:
+    def __init__(self):
+        pass
+
 class LR_Model:
     
     def __init__(self,args):
@@ -184,19 +188,19 @@ class LR_Model:
 
     def fit(self, X, y, validation_data=None, callbacks=None):
 
-        self.model = self.lr_model(X.shape[1], y.shape[1])
+        self.model = self.lr_model(len(X[0]), len(y[0]))
+
+        if self.args.verbose: self.model.summary()
 
         self.model.fit(X, y, validation_data=validation_data, 
                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
                        callbacks=callbacks, verbose=self.args.verbose)
 
+    def load(self, path):
+        self.model = load_model(path)
+
     def predict(self, X):
         return self.model.predict(X)
-
-
-    # def load(path):
-    #     '''Load saved model.'''
-    #     pass
 
 
 class CNN_Model:
@@ -231,14 +235,20 @@ class CNN_Model:
 
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
     
-        self.model = self.cnn_model(X.shape[1], y.shape[1], embedding_matrix)
+        # self.model = self.cnn_model(X.shape[1], y.shape[1], embedding_matrix)
+        self.model = self.cnn_model(len(X[0]), len(y[0]), embedding_matrix)
+
+        if self.args.verbose: self.model.summary()
 
         self.model.fit(X, y, validation_data=validation_data, 
                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
                        callbacks=callbacks, verbose=self.args.verbose)
 
+    def load(self, path):
+        self.model = load_model(path)
+
     def predict(self, X):
-        return self.model.predict()
+        return self.model.predict(X)
 
 
 class GRU_Model:

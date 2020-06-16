@@ -15,12 +15,12 @@ class MIMIC_Dataset:
     def __init__(self):
         self.name = 'MIMIC'
 
-    def load_preprocessed(self):
-        with open(f'{DATA_DIR}mimic3_data.pkl', 'rb') as file:
+    def load_preprocessed(self, path=DATA_DIR):
+        with open(f'{path}mimic3_data.pkl', 'rb') as file:
             self.df = pickle.load(file) 
 
     def save_preprocessed(self, path=DATA_DIR):
-        pd.to_pickle(self.df, f'{DATA_DIR}mimic3_data.pkl')
+        pd.to_pickle(self.df.sample(100), f'{path}mimic3_data.pkl') ######### SAMPLING FOR TEST
 
     def preprocess(self, verbose=1):
 
@@ -67,17 +67,17 @@ class MIMIC_Dataset:
         assert not np.in1d(hadm_ids[2], hadm_ids[1]).any(), 'Data leakage!'
 
         self.x_train = self.df.query("HADM_ID.isin(@hadm_ids[0])").TEXT
-        self.y_train = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[0])").ICD9_CODE)
+        self.y_train = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[0])").ICD9_CODE).tolist()
 
         self.x_val = self.df.query("HADM_ID.isin(@hadm_ids[1])").TEXT
-        self.y_val = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[1])").ICD9_CODE)
+        self.y_val = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[1])").ICD9_CODE).tolist()
 
         self.x_test = self.df.query("HADM_ID.isin(@hadm_ids[2])").TEXT
-        self.y_test = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[2])").ICD9_CODE)
+        self.y_test = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[2])").ICD9_CODE).tolist()
         
         if verbose:
             print(f'''
-            Data Split:{self.x_train.shape[0]}, {self.x_val.shape[0]}, {self.x_test.shape[0]}
+            Data Split: {self.x_train.shape[0]}, {self.x_val.shape[0]}, {self.x_test.shape[0]}
             ''')
 
 

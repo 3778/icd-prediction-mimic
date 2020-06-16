@@ -3,6 +3,7 @@
 import argparse
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
+from tensorflow.keras.models import load_model
 import pickle
 
 from constants import SAVE_DIR, W2V_SIZE, MAX_LENGTH
@@ -10,71 +11,138 @@ import utils
 import model_functions as fun
 
 
+# def main(args):
+#     ## 1. Load preprocessed data
+
+#     # Embedding layer
+#     wv_embedding_matrix, _ = utils.load_w2v_emb(w2v_vec_size=W2V_SIZE)
+
+#     # Correspondent preprocessed inputs and targets (x,y)
+#     # Note that x = [x_train, x_val, x_test] and y = [y_train, y_val, y_test]
+#     # This format fits into fun.model_args() class
+#     x, y, _ = utils.load_w2v_proc_inputs(max_words=MAX_LENGTH)
+
+
+#     ## 2. Instantiate model_args class
+
+#     model_args = fun.model_args(x,y)
+
+
+#     ## 3. Make model
+
+#     tf.keras.backend.clear_session()
+
+#     # Call model and compile
+#     model_args.model = utils.get_model(model_args, embedding_matrix=wv_embedding_matrix, args=args)
+
+#     if args.verbose: model_args.model.summary()
+    
+#     # Instantiate callbacks
+#     # tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
+#     f1_callback = fun.f1_callback_save_weights(model_args, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
+
+#     # callbacks = [tensorboard_callback, f1_callback]
+#     callbacks = [f1_callback]
+
+#     if args.MODEL_NAME == 'cnn_att':
+#         def scheduler(epoch):
+#             if epoch < 2:
+#                 return 0.001    
+#             else:
+#                 return 0.0001
+        
+#         callbacks.append(LearningRateScheduler(scheduler, verbose=0))
+
+
+#     # Fit
+#     history = model_args.model.fit(model_args.x[0], model_args.y[0], validation_data=(model_args.x[1],model_args.y[1]),
+#                                 epochs=args.epochs, batch_size=args.batch_size, callbacks=callbacks, verbose=args.verbose)
+
+#     # Restore weights from the best epoch based on F1 val with optimized threshold
+#     best_model = utils.get_model(model_args, embedding_matrix=wv_embedding_matrix, args=args)
+#     best_model.load_weights(SAVE_DIR + args.MODEL_NAME + '.h5')
+
+#     # Predict
+#     model_args.predict(custom_model = best_model)
+
+#     # Compute metrics @ best threshold
+#     print(f'''
+#     --------------------
+#     Metrics @ {model_args.best_t:.2f} for best epoch:
+#     ''')
+#     model_args.metrics(threshold = model_args.best_t)
+
+#     # Save args to correctly load weights (this will go when I manage to correcly save models)
+#     with open(f'{SAVE_DIR}args.pkl', 'wb') as file:
+#         pickle.dump(args, file)
+
+
+
+
+
+################################
+
+import datasets
+import feature_extraction as fx
+import model_functions as fun
+import utils
+
 def main(args):
-    ## 1. Load preprocessed data
 
-    # Embedding layer
-    wv_embedding_matrix, _ = utils.load_w2v_emb(w2v_vec_size=W2V_SIZE)
-
-    # Correspondent preprocessed inputs and targets (x,y)
-    # Note that x = [x_train, x_val, x_test] and y = [y_train, y_val, y_test]
-    # This format fits into fun.model_args() class
-    x, y, _ = utils.load_w2v_proc_inputs(max_words=MAX_LENGTH)
-
-
-    ## 2. Instantiate model_args class
-
-    model_args = fun.model_args(x,y)
-
-
-    ## 3. Make model
-
+    # Clear session
     tf.keras.backend.clear_session()
 
-    # Call model and compile
-    model_args.model = utils.get_model(model_args, embedding_matrix=wv_embedding_matrix, args=args)
+    # Load data and embeddings
+    mimic = datasets.MIMIC_Dataset()
+    mimic.load_preprocessed()
+    mimic.split()
 
-    if args.verbose: model_args.model.summary()
+    embedding = fx.W2V(args)
+    embedding.load_embedding(dataset_name=mimic.name)
+
+    embedding.transform(dataset=mimic)
+
+    # Call model class
+    model = utils.get_model(args)
     
-    # Instantiate callbacks
-    # tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
-    f1_callback = fun.f1_callback_save_weights(model_args, best_name= SAVE_DIR + args.MODEL_NAME + '.h5')
 
-    # callbacks = [tensorboard_callback, f1_callback]
+    # Instantiate callback
+    f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
+                                       best_name= SAVE_DIR + args.MODEL_NAME)
+
     callbacks = [f1_callback]
 
-    if args.MODEL_NAME == 'cnn_att':
+    if args.schedule_lr: 
         def scheduler(epoch):
-            if epoch < 2:
-                return 0.001    
+            if epoch < args.epoch_drop:
+                return args.initial_lr   
             else:
-                return 0.0001
+                return args.final_lr
         
         callbacks.append(LearningRateScheduler(scheduler, verbose=0))
 
-
     # Fit
-    history = model_args.model.fit(model_args.x[0], model_args.y[0], validation_data=(model_args.x[1],model_args.y[1]),
-                                epochs=args.epochs, batch_size=args.batch_size, callbacks=callbacks, verbose=args.verbose)
+    model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
 
     # Restore weights from the best epoch based on F1 val with optimized threshold
-    best_model = utils.get_model(model_args, embedding_matrix=wv_embedding_matrix, args=args)
-    best_model.load_weights(SAVE_DIR + args.MODEL_NAME + '.h5')
+    ### obs: not keeping last epoch, only best one. Maybe also save last epoch for further training? (where to add this?)
+    model.load(path=SAVE_DIR + args.MODEL_NAME)
 
     # Predict
-    model_args.predict(custom_model = best_model)
+    y_pred_train = model.predict(embedding.x_train)
+    y_pred_val = model.predict(embedding.x_val)
+    y_pred_test = model.predict(embedding.x_test)
 
-    # Compute metrics @ best threshold
+    exp = fun.Experiments2(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
+                          y_pred = [y_pred_train, y_pred_val, y_pred_test])
+
+    # Compute best threshold
+    exp.sweep_thresholds(subset=[0,1,0])
+
     print(f'''
-    --------------------
-    Metrics @ {model_args.best_t:.2f} for best epoch:
-    ''')
-    model_args.metrics(threshold = model_args.best_t)
-
-    # Save args to correctly load weights (this will go when I manage to correcly save models)
-    with open(f'{SAVE_DIR}args.pkl', 'wb') as file:
-        pickle.dump(args, file)
-
+    Metrics @ {exp.sweep_results['best_threshold']}''')
+    # Compute metrics @ best threshold
+    exp.metrics(threshold=exp.sweep_results['best_threshold'])
 
 
 ## Parser
@@ -85,6 +153,10 @@ parser.add_argument('-batch_size', type=int, dest='batch_size', default=16, help
 parser.add_argument('-units', type=int, dest='units', default=500, help='Number of Units/Filters for training neural networks.')
 parser.add_argument('-kernel_size', type=int, dest='kernel_size', default=10, help='Kernel size for CNNs.')
 parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning rate for CNN and GRU. 0 for optimized values.')
+parser.add_argument('-schedule_lr', type=float, dest='schedule_lr', default=0, help='Wether to use learning rate schedule with step decay. Set to 1 for CNN_att optimized model.')
+parser.add_argument('-initial_lr', type=float, dest='initial_lr', default=0.001, help='Starting lr for schedule. Leave default for CNN_att optimized value.')
+parser.add_argument('-final_lr', type=float, dest='final_lr', default=0.0001, help='Ending lr for schedule. Leave default for CNN_att optimized value.')
+parser.add_argument('-epoch_drop', type=int, dest='epoch_drop', default=2, help='Epoch where lr schedule will shift initial_lr by final_lr. Leave default for CNN_att optimized value.')
 parser.add_argument('-activation', type=str, dest='activation', default='tanh', help='Activation for CNN layers. CuDNNGRU must have tanh activation.')
 parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
@@ -92,65 +164,3 @@ args = parser.parse_args()
 
 # Start 
 main(args)
-
-
-################################
-
-import datasets
-import feature_extraction as fx
-
-def main(args):
-
-    mimic = datasets.MIMIC_Dataset()
-    mimic.load_preprocessed().split()
-
-    embedding = fx.W2V(args)
-    embedding.load_embedding(dataset_name=mimic)
-
-    embedding.transform(dataset=mimic)
-
-    # Call model and compile
-    model = utils.get_model(args)
-
-    if args.verbose: model.model.summary()
-    
-  
-    # Instantiate callbacks
-    # tensorboard_callback = TensorBoard(log_dir = SAVE_DIR + 'logs/fit/' + args.MODEL_NAME)
-    f1_callback = fun.f1_callback_save(model, (embedding.x_val, mimic.y_val), best_name= SAVE_DIR + args.MODEL_NAME) #arrumar
-
-    # callbacks = [tensorboard_callback, f1_callback]
-    callbacks = [f1_callback]
-
-    if args.MODEL_NAME == 'cnn_att': # change this (set as default for cnn_att in some way)
-        def scheduler(epoch):
-            if epoch < 2:
-                return 0.001    
-            else:
-                return 0.0001
-        
-        callbacks.append(LearningRateScheduler(scheduler, verbose=0))
-
-
-    # Fit
-    model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
-
-
-    ### arrumar
-
-    # Restore weights from the best epoch based on F1 val with optimized threshold
-    best_model = utils.get_model(model_args, embedding_matrix=wv_embedding_matrix, args=args)
-    best_model.load_weights(SAVE_DIR + args.MODEL_NAME + '.h5')
-
-    # Predict
-    y_pred_train = best_model.predict(embedding.x_train)
-    y_pred_val = best_model.predict(embedding.x_val)
-    y_pred_test = best_model.predict(embedding.x_test)
-
-    exp = fun.Experiments(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
-                          y_pred = [y_pred_train, y_pred_val, y_pred_test])
-
-    # Compute metrics @ best threshold
-    exp.sweep_thresholds(subset=[0,1,0])
-
-

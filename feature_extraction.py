@@ -37,10 +37,18 @@ class TFIDF: # not sure it will handle the pandas objects
         self.tfidf.fit(X)
 
 
-    def transform(self, X):
+    def transform(self, X=None, dataset=None):
 
-        return self.tfidf.transform(X.pipe(utils.preprocessor_tfidf))
+        def transform_X(X):
+            return self.tfidf.transform(X.pipe(utils.preprocessor_tfidf))
 
+        if X:
+            return transform_X(X)
+        
+        else: ##### check this ##############
+            self.x_train = transform_X(dataset.x_train).toarray().tolist()
+            self.x_val = transform_X(dataset.x_val).toarray().tolist()
+            self.x_test = transform_X(dataset.x_test).toarray().tolist()        
 
     def save(self):
         pass
@@ -121,31 +129,31 @@ class W2V:
         if X:
             return transform_X(X)
 
-        else:
-            self.x_train = transform_X(dataset.x_train)
-            self.x_val = transform_X(dataset.x_val)
-            self.x_test = transform_X(dataset.x_test)
+        else: ########### [temp solution] check - error: keras can't handle series nor arrays with list inside ###############
+            self.x_train = np.vstack(transform_X(dataset.x_train).to_list()).tolist()
+            self.x_val = np.vstack(transform_X(dataset.x_val).to_list()).tolist()
+            self.x_test = np.vstack(transform_X(dataset.x_test).to_list()).tolist()
 
         # Save transformed embeddings? (as in MIMIC_process_inputs.py)
 
     def save_embedding(self, dataset_name='MIMIC'):
         # Save embedding layer and row dict
 
-        with open(f'{W2V_DIR}MIMIC_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+        with open(f'{W2V_DIR}{dataset_name}_emb_train_vec{W2V_SIZE}.pkl', 'wb') as file:
             pickle.dump(self.embedding_matrix, file)
 
-        with open(f'{W2V_DIR}MIMIC_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
+        with open(f'{W2V_DIR}{dataset_name}_dict_train_vec{W2V_SIZE}.pkl', 'wb') as file:
             pickle.dump(self.row_dict, file)
 
 
     def load_embedding(self, dataset_name='MIMIC'):
 
         # Load embedding matrix
-        with open(f'{W2V_DIR}{dataset}_emb_train_vec{W2V_SIZE}.pkl','rb') as file:
+        with open(f'{W2V_DIR}{dataset_name}_emb_train_vec{W2V_SIZE}.pkl','rb') as file:
             self.embedding_matrix = pickle.load(file)
         
         # Load row_dict
-        with open(f'{W2V_DIR}{dataset}_dict_train_vec{W2V_SIZE}.pkl','rb') as file:
+        with open(f'{W2V_DIR}{dataset_name}_dict_train_vec{W2V_SIZE}.pkl','rb') as file:
             self.row_dict = pickle.load(file)
 
     # def save_processed(self, dataset='MIMIC'):

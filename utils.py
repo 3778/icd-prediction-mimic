@@ -43,7 +43,7 @@ def preprocessor_word2vec(text_series):
 
 
 def convert_data_to_index(string_data, row_dict):
-    return [row_dict.get(word, row_dict['_unkown_']) for word in string_data]
+    return [row_dict.get(word, row_dict['_unknown_']) for word in string_data]
 
 
 def split(df, mlb, all_icds, train_ids, val_ids, test_ids, to_array=True):
@@ -77,19 +77,19 @@ def split(df, mlb, all_icds, train_ids, val_ids, test_ids, to_array=True):
     return model_args
 
 
-def get_model(model_args, embedding_matrix = None, args = None):
+# def get_model(model_args, embedding_matrix = None, args = None):
 
-    if args.MODEL_NAME == 'lr':
-        return models.lr_model(model_args, args)
+#     if args.MODEL_NAME == 'lr':
+#         return models.lr_model(model_args, args)
 
-    elif args.MODEL_NAME == 'cnn':
-        return models.cnn_model(model_args, embedding_matrix, args)
+#     elif args.MODEL_NAME == 'cnn':
+#         return models.cnn_model(model_args, embedding_matrix, args)
 
-    elif args.MODEL_NAME == 'gru':
-        return models.gru_model(model_args, embedding_matrix, args)
+#     elif args.MODEL_NAME == 'gru':
+#         return models.gru_model(model_args, embedding_matrix, args)
 
-    elif args.MODEL_NAME == 'cnn_att':
-        return models.cnn_att_model(model_args, embedding_matrix, args)
+#     elif args.MODEL_NAME == 'cnn_att':
+#         return models.cnn_att_model(model_args, embedding_matrix, args)
 
 
 def load_model_custom(model_args, embedding_matrix=None, args=None):
@@ -171,3 +171,20 @@ def load_w2v_proc_inputs(max_words=MAX_LENGTH, dataset='MIMIC', verbose=0):
         """)
 
     return x, y, mlb
+
+
+################################
+
+def get_model(args):
+
+    if args.MODEL_NAME == 'lr':
+        return models.LR_Model(args)
+
+    elif args.MODEL_NAME == 'cnn':
+        return models.CNN_Model(args)
+
+    elif args.MODEL_NAME == 'gru':
+        return models.GRU_Model(args)
+
+    elif args.MODEL_NAME == 'cnn_att':
+        return models.CNNAtt_Model(args)
