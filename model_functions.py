@@ -305,7 +305,7 @@ class Experiments:
         y_pred = [y_pred_train, y_pred_val, y_pred_test]
         
         """
-        self.y_true = y_true
+        self.y_true = np.array(y_true) ############## check ###########
         self.y_pred = y_pred
         self.y_sparse = None
 
@@ -376,7 +376,7 @@ class Experiments:
         sweep_rec = []
         sweep_avg_pred = []
 
-        assert type(subset) == list and len(subset) == len(self.y_true) and sum(subset)==1, 'Chose a single subset for this experiment!'
+        #assert type(subset) == list and len(subset) == len(self.y_true) and sum(subset)==1, 'Chose a single subset for this experiment!'
         
         subset_idx = subset.index(1)
 
@@ -468,19 +468,19 @@ class f1_callback_save(Callback):
         # Predict and compute f1 val
         self.y_pred_val = self.model.predict(self.x_val)
 
-        self.exp = Experiments(self.y_val, self.y_pred_val)
+        self.exp = Experiments([None,self.y_val, None], [None, self.y_pred_val, None])
 
         # sweep thresh
-        self.exp.sweep_thresholds()
+        self.exp.sweep_thresholds(subset=[0,1,0])
 
         # get metrics of best thresh
-        self.exp.metrics(threshold = self.exp.sweep_results['best_threshold'] )
+        self.exp.metrics(subsets=[0,1,0],threshold = self.exp.sweep_results['best_threshold'] )
 
         print('')
         
         # Set items to store in Tensorboard
         items_to_write={
-            "f1_val": self.exp.f1_score
+            "f1_val": self.exp.f1_score[1]
         }
         
         # Send to Tensorboard logs
@@ -496,10 +496,10 @@ class f1_callback_save(Callback):
 
         # Store best model
         if self.store_best:
-            if self.exp.f1_score > self.best_f1_val:
+            if self.exp.f1_score[1] > self.best_f1_val:
                 self.best_model = self.model
                 print('F1 val improved --> storing best model')
-                self.best_f1_val = self.exp.f1_score
+                self.best_f1_val = self.exp.f1_score[1]
                 self.best_epoch = epoch
                 self.best_model.save(self.best_name)
 

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization, CuDNNGRU
+from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization#, CuDNNGRU
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
 
@@ -118,52 +118,52 @@ class CNN_Model:
 
 
 
-class GRU_Model:
+# class GRU_Model:
 
-    def __init__(self,args):
-        self.args = args
+    # def __init__(self,args):
+    #     self.args = args
 
-    def gru_model(self, input_shape, output_shape, embedding_matrix):
+    # def gru_model(self, input_shape, output_shape, embedding_matrix):
 
-        if not self.args.lr:
-            self.args.lr = 8e-4
+    #     if not self.args.lr:
+    #         self.args.lr = 8e-4
 
-        # Build model
-        sequence_input = Input(shape=(input_shape,), dtype='int32')
+    #     # Build model
+    #     sequence_input = Input(shape=(input_shape,), dtype='int32')
 
-        embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
-                                    output_dim = embedding_matrix.shape[1], 
-                                    weights = [embedding_matrix], 
-                                    input_length = input_shape,
-                                    trainable = True) (sequence_input)
+    #     embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
+    #                                 output_dim = embedding_matrix.shape[1], 
+    #                                 weights = [embedding_matrix], 
+    #                                 input_length = input_shape,
+    #                                 trainable = True) (sequence_input)
 
-        x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
-        x = BatchNormalization() (x)
-        x = GlobalAveragePooling1D() (x)
+    #     x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
+    #     x = BatchNormalization() (x)
+    #     x = GlobalAveragePooling1D() (x)
 
-        outputs = Dense(output_shape, activation='sigmoid') (x)
+    #     outputs = Dense(output_shape, activation='sigmoid') (x)
 
-        model = Model(sequence_input, outputs)
-        model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr))
+    #     model = Model(sequence_input, outputs)
+    #     model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr))
 
-        return model
+    #     return model
 
-    def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
+    # def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
 
-        # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
-        self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
+    #     # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
+    #     self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
 
-        if self.args.verbose: self.model.summary()
+    #     if self.args.verbose: self.model.summary()
 
-        self.model.fit(X, y, validation_data=validation_data, 
-                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
-                        callbacks=callbacks, verbose=self.args.verbose)
+    #     self.model.fit(X, y, validation_data=validation_data, 
+    #                     epochs=self.args.epochs, batch_size=self.args.batch_size, 
+    #                     callbacks=callbacks, verbose=self.args.verbose)
 
-    def load(self, path):
-        self.model = load_model(path)
+    # def load(self, path):
+    #     self.model = load_model(path)
 
-    def predict(self, X):
-        return self.model.predict(X)
+    # def predict(self, X):
+    #     return self.model.predict(X)
 
 
 
@@ -180,12 +180,14 @@ class CNNAtt_Model:
             self.n_cols = n_cols
         def build(self, input_shape):
             self.U = self.add_weight(name='trainmat', shape=(self.n_rows, self.n_cols), initializer='glorot_uniform', trainable=True)
-            super(TrainableMatrix, self).build(input_shape)
+            # super(self.TrainableMatrix, self).build(input_shape)
+            super().build(input_shape)
         def call(self, inputs):
             return self.U
         
         def get_config(self):
-            config = super(TrainableMatrix, self).get_config()
+            # config = super(self.TrainableMatrix, self).get_config()
+            config = super().get_config()
             config.update({
                 'n_rows': self.n_rows,
                 'n_cols': self.n_cols
@@ -205,7 +207,8 @@ class CNNAtt_Model:
                                         shape=(1,) + tuple([int(a) for a in input_shape[1:]]),
                                         initializer='zeros',
                                         trainable=True)
-            super(Hadamard, self).build(input_shape)
+            # super(self.Hadamard, self).build(input_shape)
+            super().build(input_shape)
         def call(self, x):
             return tf.keras.activations.sigmoid(tf.reduce_sum(x*self.kernel + self.bias, axis=-1))
         def compute_output_shape(self, input_shape):
