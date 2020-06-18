@@ -25,13 +25,18 @@ def main(args):
     ''')
 
 
-## Parser
-parser = argparse.ArgumentParser(description='Train Word2Vec word embeddings')
-parser.add_argument('-workers', type=int, dest='workers', default=8, help='Number of CPU threads for W2V training.')
-parser.add_argument('--reset_stopwords', type=bool, dest='reset_stopwords', default=0, help='True to set stopwords vectors to null. Default False.')
-parser.add_argument('--train_method', type=bool, dest='sg', default=1, help='W2V train method. 0 for CBoW, 1 for Skipgram.')
+def arg_parser():
 
-args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='Train Word2Vec word embeddings')
+    parser.add_argument('-workers', type=int, dest='workers', default=8, help='Number of CPU threads for W2V training.')
+    parser.add_argument('--reset_stopwords', type=bool, dest='reset_stopwords', default=0, help='True to set stopwords vectors to null. Default False.')
+    parser.add_argument('--train_method', type=bool, dest='sg', default=1, help='W2V train method. 0 for CBoW, 1 for Skipgram.')
 
-# Start 
-main(args)
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+
+    args = arg_parser()
+
+    main(args)

@@ -19,7 +19,7 @@ class MIMIC_Dataset:
             self.df = pickle.load(file) 
 
     def save_preprocessed(self, path=DATA_DIR):
-        pd.to_pickle(self.df.sample(100), f'{path}mimic3_data.pkl') ########################
+        pd.to_pickle(self.df, f'{path}mimic3_data.pkl')
 
     def preprocess(self, verbose=1):
 
@@ -54,7 +54,7 @@ class MIMIC_Dataset:
         self.all_icds = hist.index.tolist()
         self.mlb = MultiLabelBinarizer(self.all_icds).fit(self.df['ICD9_CODE'])
 
-        if not hadm_ids: # change this
+        if not hadm_ids:
             train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
             val_ids = utils.load_ids_from_txt(f'{DATA_DIR}dev_full_hadm_ids.csv')
             test_ids = utils.load_ids_from_txt(f'{DATA_DIR}test_full_hadm_ids.csv')
@@ -65,16 +65,16 @@ class MIMIC_Dataset:
         assert not np.in1d(hadm_ids[0], hadm_ids[2]).any(), 'Data leakage!'
         assert not np.in1d(hadm_ids[2], hadm_ids[1]).any(), 'Data leakage!'
 
+        # Get most occurring icds in training set
         self.all_icds_train = utils.make_icds_histogram(self.df.query("HADM_ID.isin(@hadm_ids[0])")).index.tolist()
 
-        self.x_train = self.df.query("HADM_ID.isin(@hadm_ids[0])").TEXT
-        self.y_train = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[0])").ICD9_CODE).tolist()
-
-        self.x_val = self.df.query("HADM_ID.isin(@hadm_ids[1])").TEXT
-        self.y_val = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[1])").ICD9_CODE).tolist()
-
-        self.x_test = self.df.query("HADM_ID.isin(@hadm_ids[2])").TEXT
-        self.y_test = self.mlb.transform(self.df.query("HADM_ID.isin(@hadm_ids[2])").ICD9_CODE).tolist()
+        ((self.x_train, self.y_train),
+         (self.x_val, self.y_val),
+         (self.x_test, self.y_test)) = [
+             (self.df.query("HADM_ID.isin(@ids)").TEXT, 
+             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE).tolist())
+             for ids in hadm_ids
+             ]
         
         if verbose:
             print(f'''

@@ -23,9 +23,9 @@ def main(args):
     mimic.split()
 
     embedding = fx.W2V(args)
-    embedding.load_embedding(dataset_name=mimic.name)
+    embedding.load_embedding(mimic)
 
-    embedding.transform(dataset=mimic)
+    embedding.transform(mimic)
 
     # Call model class
     model = utils.get_model(args)
@@ -70,22 +70,27 @@ def main(args):
     exp.metrics(threshold=exp.sweep_results['best_threshold'])
 
 
-## Parser
-parser = argparse.ArgumentParser(description='Train model for MIMIC-III dataset and compute metrics.')
-parser.add_argument('-model', type=str, dest='MODEL_NAME', choices=['cnn', 'gru','cnn_att'], default='cnn', help='Model for training.')
-parser.add_argument('-epochs', type=int, dest='epochs', default=10, help='Number of epochs.')
-parser.add_argument('-batch_size', type=int, dest='batch_size', default=16, help='Batch Size.')
-parser.add_argument('-units', type=int, dest='units', default=500, help='Number of Units/Filters for training neural networks.')
-parser.add_argument('-kernel_size', type=int, dest='kernel_size', default=10, help='Kernel size for CNNs.')
-parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning rate for CNN and GRU. 0 for optimized values.')
-parser.add_argument('-schedule_lr', type=float, dest='schedule_lr', default=0, help='Wether to use learning rate schedule with step decay. Set to 1 for CNN_att optimized model.')
-parser.add_argument('-initial_lr', type=float, dest='initial_lr', default=0.001, help='Starting lr for schedule. Leave default for CNN_att optimized value.')
-parser.add_argument('-final_lr', type=float, dest='final_lr', default=0.0001, help='Ending lr for schedule. Leave default for CNN_att optimized value.')
-parser.add_argument('-epoch_drop', type=int, dest='epoch_drop', default=2, help='Epoch where lr schedule will shift initial_lr by final_lr. Leave default for CNN_att optimized value.')
-parser.add_argument('-activation', type=str, dest='activation', default='tanh', help='Activation for CNN layers. CuDNNGRU must have tanh activation.')
-parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
+def arg_parser():
+    
+    parser = argparse.ArgumentParser(description='Train model for MIMIC-III dataset and compute metrics.')
+    parser.add_argument('-model', type=str, dest='MODEL_NAME', choices=['cnn', 'gru','cnn_att'], default='cnn', help='Model for training.')
+    parser.add_argument('-epochs', type=int, dest='epochs', default=10, help='Number of epochs.')
+    parser.add_argument('-batch_size', type=int, dest='batch_size', default=16, help='Batch Size.')
+    parser.add_argument('-units', type=int, dest='units', default=500, help='Number of Units/Filters for training neural networks.')
+    parser.add_argument('-kernel_size', type=int, dest='kernel_size', default=10, help='Kernel size for CNNs.')
+    parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning rate for CNN and GRU. 0 for optimized values.')
+    parser.add_argument('-schedule_lr', type=float, dest='schedule_lr', default=0, help='Wether to use learning rate schedule with step decay. Set to 1 for CNN_att optimized model.')
+    parser.add_argument('-initial_lr', type=float, dest='initial_lr', default=0.001, help='Starting lr for schedule. Leave default for CNN_att optimized value.')
+    parser.add_argument('-final_lr', type=float, dest='final_lr', default=0.0001, help='Ending lr for schedule. Leave default for CNN_att optimized value.')
+    parser.add_argument('-epoch_drop', type=int, dest='epoch_drop', default=2, help='Epoch where lr schedule will shift initial_lr by final_lr. Leave default for CNN_att optimized value.')
+    parser.add_argument('-activation', type=str, dest='activation', default='tanh', help='Activation for CNN layers. CuDNNGRU must have tanh activation.')
+    parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
-args = parser.parse_args()
+    return parser.parse_args()
 
-# Start 
-main(args)
+
+if __name__ == '__main__':
+
+    args = arg_parser()
+
+    main(args)

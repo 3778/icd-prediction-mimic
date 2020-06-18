@@ -6,10 +6,15 @@
 
 import datasets
 
-mimic = datasets.MIMIC_Dataset()
+def main():
 
-mimic.preprocess()
+    mimic = datasets.MIMIC_Dataset()
 
-mimic.save_preprocessed()
+    mimic.preprocess()
+
+    mimic.save_preprocessed()
 
 
+if __name__ == '__main__':
+
+    main()

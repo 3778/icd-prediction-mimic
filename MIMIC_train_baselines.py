@@ -25,8 +25,8 @@ def main(args):
 
     if args.MODEL_NAME == 'lr':
         tfidf = fx.TFIDF(args)
-        tfidf.fit(mimic.x_train)
-        tfidf.transform(dataset=mimic)
+        tfidf.fit(mimic)
+        tfidf.transform(mimic)
 
         # Instantiate callback
         f1_callback = fun.f1_callback_save(model, validation_data=(tfidf.x_val, mimic.y_val),
@@ -79,19 +79,22 @@ def main(args):
 
 
 
+def arg_parser():
 
-        
-## Parser
-parser = argparse.ArgumentParser(description='Train model for MIMIC-III dataset and compute metrics.')
-parser.add_argument('-model', type=str, dest='MODEL_NAME', choices=['lr', 'cte'], default = 'lr',help='Model for training.')
-parser.add_argument('-epochs', type=int, dest='epochs', default=10, help='Number of epochs.')
-parser.add_argument('-tfidf_maxfeatures', type=int, dest='max_features', default=20000, help='Max features for TF-IDF.')
-parser.add_argument('-batch_size', type=int, dest='batch_size', default=32, help='Batch Size.')
-parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning Rate. 0 for article optimized value.')
-parser.add_argument('-k', type=int, dest='k', default=15, help='Fixed k-size of predictions for Constant Model.')
-parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
+    parser = argparse.ArgumentParser(description='Train model for MIMIC-III dataset and compute metrics.')
+    parser.add_argument('-model', type=str, dest='MODEL_NAME', choices=['lr', 'cte'], default = 'lr',help='Model for training.')
+    parser.add_argument('-epochs', type=int, dest='epochs', default=10, help='Number of epochs.')
+    parser.add_argument('-tfidf_maxfeatures', type=int, dest='max_features', default=20000, help='Max features for TF-IDF.')
+    parser.add_argument('-batch_size', type=int, dest='batch_size', default=32, help='Batch Size.')
+    parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning Rate. 0 for article optimized value.')
+    parser.add_argument('-k', type=int, dest='k', default=15, help='Fixed k-size of predictions for Constant Model.')
+    parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
-args = parser.parse_args()
+    return parser.parse_args()
 
 
-main(args)
+if __name__ == '__main__':
+
+    args = arg_parser()
+
+    main(args)

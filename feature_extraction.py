@@ -26,35 +26,26 @@ class TFIDF:
 
     def __init__(self, args):
         self.args = args
-
-    def fit(self, X): 
-
-        X = X.pipe(utils.preprocessor_tfidf)
-
-        # Instantiate TF-IDF Transformer 
         self.tfidf = TfidfVectorizer(stop_words = STOP_WORDS.words('english'), max_features=self.args.max_features)
 
+    def fit(self, dataset): 
+
+        X = dataset.x_train.pipe(utils.preprocessor_tfidf)
+
+        # Fit TF-IDF Transformer 
         self.tfidf.fit(X)
 
+    def transform(self, dataset):
 
-    def transform(self, X=None, dataset=None):
+        def transform_subset(X):
+            X = X.pipe(utils.preprocessor_tfidf)
 
-        def transform_X(X):
-            return self.tfidf.transform(X.pipe(utils.preprocessor_tfidf))
+            return self.tfidf.transform(X).toarray().tolist() ##### check this #######
 
-        if X:
-            return transform_X(X)
-        
-        else: ##### check this ##############
-            self.x_train = transform_X(dataset.x_train).toarray().tolist()
-            self.x_val = transform_X(dataset.x_val).toarray().tolist()
-            self.x_test = transform_X(dataset.x_test).toarray().tolist()        
-
-    def save(self):
-        pass
-
-    def load(self):
-        pass
+        ##### check this ##############
+        self.x_train = transform_subset(dataset.x_train)
+        self.x_val = transform_subset(dataset.x_val)
+        self.x_test = transform_subset(dataset.x_test)
 
 
 class W2V:
@@ -62,13 +53,13 @@ class W2V:
     def __init__(self, args):
         self.args = args
 
-    def fit(self, X, verbose=1): #ave=True or def save()?
-
-        token_review = X.pipe(utils.preprocessor)
-
-        # Instantiate model (maybe do this in init?)
+        # Instantiate model
         self.model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5,
                         workers=self.args.workers, sg=self.args.sg, seed=3778)
+
+    def fit(self, dataset, verbose=1):
+
+        token_review = dataset.x_train.pipe(utils.preprocessor)
 
         # Build vocab over train samples
         self.model_w2v.build_vocab(token_review)
@@ -112,7 +103,7 @@ class W2V:
             ''')
 
 
-    def transform(self, X=None, dataset=None):
+    def transform(self, dataset):
 
         def transform_X(X):
             return (X
@@ -121,13 +112,10 @@ class W2V:
                     .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
                                                 maxlen = MAX_LENGTH, value = self.row_dict['_padding_']))))
 
-        if X:
-            return transform_X(X)
-
-        else: ########### [temp solution] check - error: keras can't handle series nor arrays with list inside ###############
-            self.x_train = np.vstack(transform_X(dataset.x_train).to_list()).tolist()
-            self.x_val = np.vstack(transform_X(dataset.x_val).to_list()).tolist()
-            self.x_test = np.vstack(transform_X(dataset.x_test).to_list()).tolist()
+        ########### [temp solution] check - error: keras can't handle series nor arrays with list inside ###############
+        self.x_train = np.vstack(transform_X(dataset.x_train).to_list()).tolist()
+        self.x_val = np.vstack(transform_X(dataset.x_val).to_list()).tolist()
+        self.x_test = np.vstack(transform_X(dataset.x_test).to_list()).tolist()
 
 
     def save_embedding(self, dataset_name='MIMIC'):
