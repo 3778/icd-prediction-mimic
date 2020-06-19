@@ -73,30 +73,24 @@ class W2V:
         elapsed=time() - t0
         if verbose: print(f'Time taken for Word2vec training: {elapsed} seconds.')
 
-        # List all words in embedding
-        words_w2v = list(self.model_w2v.wv.vocab.keys())
+
+        # Create word embedding matrix
+        self.embedding_matrix = self.model_w2v.wv[self.model_w2v.wv.vocab]
 
         # Create dict for embedding matrix (word <-> row)
-        self.row_dict = dict({word:self.model_w2v.wv.vocab[word].index for word in words_w2v})
+        self.row_dict=dict({word:idx for idx,word in enumerate(self.model_w2v.wv.vocab)})
 
-        # Include Padding/Unknown indexes
-        self.row_dict['_unknown_'] = len(words_w2v)
-        self.row_dict['_padding_'] = len(words_w2v)+1
+        # Create and map unknown and padding tokens to null
+        self.embedding_matrix = np.concatenate((self.embedding_matrix, np.zeros((2,W2V_SIZE))), axis=0)
+        self.row_dict['_unknown_'] = len(self.model_w2v.wv.vocab)
+        self.row_dict['_padding_'] = len(self.model_w2v.wv.vocab) + 1
 
-        # Define stopwords
-        stopwords = STOP_WORDS.words('english')
+        if self.args.reset_stopwords:
+            stopwords = STOP_WORDS.words('english')
+            for word in self.row_dict:
+                if word in stopwords: self.embedding_matrix[self.row_dict[word]] = np.zeros(W2V_SIZE)
 
-        # Create word embedding matrix:
-        self.embedding_matrix = np.zeros((len(words_w2v)+2, W2V_SIZE))
-
-        for word in words_w2v:
-            self.embedding_matrix[self.row_dict[word]][:] = np.array(self.model_w2v.wv[word])
-
-            if self.args.reset_stopwords: # point stopwords to zeros
-                if word in stopwords:
-                    self.embedding_matrix[self.row_dict[word]][:] = np.zeros(W2V_SIZE)
-
-
+        
         if verbose:
             print(f'''
             W2V embedding matrix shape: {self.embedding_matrix.shape}
