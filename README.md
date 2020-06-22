@@ -5,14 +5,22 @@
 This repository contains code for training and evaluating all models described in the paper [link2paper](url), for the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4).
 
 
-# Dependencies
+## Dependencies
 
-???
+This project depends on:
 
-To install dependencies, run ?
+- python>=3.6.5
+- numpy==1.16.4
+- pickle==4.0
+- scikit-learn==0.22
+- pandas==1.0.1
+- nltk==3.3
+- scipy==1.3.1
+- gensim==3.8.0
+- tensorflow==2.0.0 (preferably tensorflow-gpu)
 
 
-# General pipeline:
+## General pipeline:
 
 
 ## 1. In `data/`, place the files below:

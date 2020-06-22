@@ -1,12 +1,22 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization#, CuDNNGRU
+from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
 
 import pandas as pd
 import numpy as np
 import utils
+
+# Check for GPU
+if len(tf.config.experimental.list_physical_devices('GPU')):
+    from tensorflow.keras.layers import CuDNNGRU # CuDNNGRU only runs on GPU
+else:
+    from tensorflow.keras.layers import GRU
+    print(f'''
+    Tensorflow-gpu not installed or no GPU available. 
+    Using CPU instead.
+    ''')
 
 
 class CTE_Model:
@@ -118,52 +128,56 @@ class CNN_Model:
 
 
 
-# class GRU_Model:
+class GRU_Model:
 
-    # def __init__(self,args):
-    #     self.args = args
+    def __init__(self,args):
+        self.args = args
 
-    # def gru_model(self, input_shape, output_shape, embedding_matrix):
+    def gru_model(self, input_shape, output_shape, embedding_matrix):
 
-    #     if not self.args.lr:
-    #         self.args.lr = 8e-4
+        if not self.args.lr:
+            self.args.lr = 8e-4
 
-    #     # Build model
-    #     sequence_input = Input(shape=(input_shape,), dtype='int32')
+        # Build model
+        sequence_input = Input(shape=(input_shape,), dtype='int32')
 
-    #     embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
-    #                                 output_dim = embedding_matrix.shape[1], 
-    #                                 weights = [embedding_matrix], 
-    #                                 input_length = input_shape,
-    #                                 trainable = True) (sequence_input)
+        embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
+                                    output_dim = embedding_matrix.shape[1], 
+                                    weights = [embedding_matrix], 
+                                    input_length = input_shape,
+                                    trainable = True) (sequence_input)
 
-    #     x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
-    #     x = BatchNormalization() (x)
-    #     x = GlobalAveragePooling1D() (x)
+        if len(tf.config.experimental.list_physical_devices('GPU')):
+            x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
+        else: 
+            x = GRU(self.args.units, return_sequences=True) (embedding_layer)
 
-    #     outputs = Dense(output_shape, activation='sigmoid') (x)
+        x = BatchNormalization() (x)
+        x = GlobalAveragePooling1D() (x)
 
-    #     model = Model(sequence_input, outputs)
-    #     model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr))
+        outputs = Dense(output_shape, activation='sigmoid') (x)
 
-    #     return model
+        model = Model(sequence_input, outputs)
+        model.compile(loss='binary_crossentropy',optimizer=Adam(self.args.lr))
 
-    # def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
+        return model
 
-    #     # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
-    #     self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
+    def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
 
-    #     if self.args.verbose: self.model.summary()
+        # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
+        self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
 
-    #     self.model.fit(X, y, validation_data=validation_data, 
-    #                     epochs=self.args.epochs, batch_size=self.args.batch_size, 
-    #                     callbacks=callbacks, verbose=self.args.verbose)
+        if self.args.verbose: self.model.summary()
 
-    # def load(self, path):
-    #     self.model = load_model(path)
+        self.model.fit(X, y, validation_data=validation_data, 
+                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
+                        callbacks=callbacks, verbose=self.args.verbose)
 
-    # def predict(self, X):
-    #     return self.model.predict(X)
+    def load(self, path):
+        self.model = load_model(path)
+
+    def predict(self, X):
+        return self.model.predict(X)
 
 
 
