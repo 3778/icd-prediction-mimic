@@ -50,12 +50,32 @@ class TFIDF:
 
 class W2V:
 
-    def __init__(self, args):
-        self.args = args
+    def __init__(self, args=None):
 
-        # Instantiate model
-        self.model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5,
-                        workers=self.args.workers, sg=self.args.sg, seed=3778)
+        if type(args) == str: # i.e. if name is passed
+            self.name = args
+            self.init_from_file()
+        else:
+            self.args = args
+            # Instantiate model
+            self.model_w2v = Word2Vec(min_count=10, window=5, size=W2V_SIZE, sample=1e-3, negative=5,
+                            workers=self.args.workers, sg=self.args.sg, seed=3778)
+
+
+    def init_from_file(self): # substitutes load_embedding
+
+        # Also load model?
+        self.model_w2v = None
+
+        # Load embedding matrix
+        with open(f'{W2V_DIR}{self.name}_emb_train_vec{W2V_SIZE}.pkl','rb') as file:
+            self.embedding_matrix = pickle.load(file)
+        
+        # Load row_dict
+        with open(f'{W2V_DIR}{self.name}_dict_train_vec{W2V_SIZE}.pkl','rb') as file:
+            self.row_dict = pickle.load(file)
+
+
 
     def fit(self, dataset, verbose=1):
 

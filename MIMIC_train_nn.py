@@ -2,7 +2,6 @@
 
 import argparse
 import tensorflow as tf
-from tensorflow.keras.callbacks import LearningRateScheduler
 import pickle
 
 from constants import SAVE_DIR, W2V_SIZE, MAX_LENGTH
@@ -14,6 +13,8 @@ import utils
 
 def main(args):
 
+    save_path = SAVE_DIR + args.MODEL_NAME
+
     # Clear session
     tf.keras.backend.clear_session()
 
@@ -22,9 +23,10 @@ def main(args):
     mimic.load_preprocessed()
     mimic.split()
 
-    embedding = fx.W2V(args)
-    embedding.load_embedding(mimic)
+    # Load trained embedding
+    embedding = fx.W2V('MIMIC')
 
+    # Transform using input
     embedding.transform(mimic)
 
     # Call model class
@@ -33,25 +35,23 @@ def main(args):
 
     # Instantiate callback
     f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
-                                       best_name= SAVE_DIR + args.MODEL_NAME)
+                                       best_name = save_path)
 
     callbacks = [f1_callback]
 
+    # Learning rate single-step schedule
     if args.schedule_lr: 
-        def scheduler(epoch):
-            if epoch < args.epoch_drop:
-                return args.initial_lr   
-            else:
-                return args.final_lr
-        
-        callbacks.append(LearningRateScheduler(scheduler, verbose=0))
+        callbacks.append(utils.lr_schedule_callback(args))
 
     # Fit
     model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
 
+    # Save model state after last epoch
+    if args.save_last_epoch:
+        model.save(f'{save_path}ep{args.epochs}')
+
     # Restore weights from the best epoch based on F1 val with optimized threshold
-    ### obs: not keeping last epoch, only best one. Maybe also save last epoch for further training? (where to add this?)
-    model.load(path=SAVE_DIR + args.MODEL_NAME)
+    model = utils.get_model(args, load_path = save_path)
 
     # Predict
     y_pred_train = model.predict(embedding.x_train)
@@ -84,6 +84,7 @@ def arg_parser():
     parser.add_argument('-final_lr', type=float, dest='final_lr', default=0.0001, help='Ending lr for schedule. Leave default for CNN_att optimized value.')
     parser.add_argument('-epoch_drop', type=int, dest='epoch_drop', default=2, help='Epoch where lr schedule will shift initial_lr by final_lr. Leave default for CNN_att optimized value.')
     parser.add_argument('-activation', type=str, dest='activation', default='tanh', help='Activation for CNN layers. CuDNNGRU must have tanh activation.')
+    parser.add_argument('-save_last_epoch', type=bool, dest='save_lest_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
     parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
     return parser.parse_args()

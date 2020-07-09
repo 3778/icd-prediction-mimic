@@ -21,7 +21,7 @@ else:
 
 class CTE_Model:
 
-    def __init__(self, args):
+    def __init__(self, args, load_path=None):
         self.args = args
 
     def cte_model(self):
@@ -43,8 +43,18 @@ class CTE_Model:
 
 class LR_Model:
     
-    def __init__(self,args):
-        self.args = args
+    def __init__(self, args=None, load_path=None):
+
+        # You could load from path but also get args, in order to continue training. 
+        self.args = args 
+
+        if load_path:
+            self.load_path = load_path
+            self.load_from_path()
+            
+
+    def load_from_path(self):
+        self.model = load_model(self.load_path)
 
     def lr_model(self, input_shape, output_shape):
 
@@ -63,7 +73,8 @@ class LR_Model:
     
     def fit(self, X, y, validation_data=None, callbacks=None):
 
-        self.model = self.lr_model(len(X[0]), len(y[0]))
+        if not self.model:
+            self.model = self.lr_model(len(X[0]), len(y[0]))
 
         if self.args.verbose: self.model.summary()
 
@@ -71,18 +82,26 @@ class LR_Model:
                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
                        callbacks=callbacks, verbose=self.args.verbose)
 
-    def load(self, path):
-        self.model = load_model(path)
-
     def predict(self, X):
         return self.model.predict(X)
+
+    def save_model(self, path):
+        # No need to save model if f1_callback is used, as it already saved model at best epoch
+        self.model.save(path)
 
 
 
 class CNN_Model:
 
-    def __init__(self,args):
+    def __init__(self, args=None, load_path=None):
         self.args = args
+
+        if load_path:
+            self.load_path = load_path
+            self.load_from_path()
+
+    def load_from_path(self):
+        self.model = load_model(self.load_path)
 
     def cnn_model(self, input_shape, output_shape, embedding_matrix):
             
@@ -111,8 +130,8 @@ class CNN_Model:
 
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
     
-        # self.model = self.cnn_model(X.shape[1], y.shape[1], embedding_matrix)
-        self.model = self.cnn_model(len(X[0]), len(y[0]), embedding_matrix)
+        if not self.model:
+            self.model = self.cnn_model(len(X[0]), len(y[0]), embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -120,18 +139,26 @@ class CNN_Model:
                        epochs=self.args.epochs, batch_size=self.args.batch_size, 
                        callbacks=callbacks, verbose=self.args.verbose)
 
-    def load(self, path):
-        self.model = load_model(path)
-
     def predict(self, X):
         return self.model.predict(X)
+
+    def save_model(self, path):
+        # No need to save model if f1_callback is used, as it already saved model at best epoch
+        self.model.save(path)
 
 
 
 class GRU_Model:
 
-    def __init__(self,args):
+    def __init__(self,args=None, load_path=None):
         self.args = args
+
+        if load_path:
+            self.load_path = load_path
+            self.load_from_path()
+
+    def load_from_path(self):
+        self.model = load_model(self.load_path)
 
     def gru_model(self, input_shape, output_shape, embedding_matrix):
 
@@ -164,8 +191,9 @@ class GRU_Model:
 
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
 
-        # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
-        self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
+        if not self.model:
+            # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
+            self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -173,18 +201,26 @@ class GRU_Model:
                         epochs=self.args.epochs, batch_size=self.args.batch_size, 
                         callbacks=callbacks, verbose=self.args.verbose)
 
-    def load(self, path):
-        self.model = load_model(path)
-
     def predict(self, X):
         return self.model.predict(X)
+
+    def save_model(self, path):
+        # No need to save model if f1_callback is used, as it already saved model at best epoch
+        self.model.save(path)
 
 
 
 class CNNAtt_Model:
 
-    def __init__(self,args):
+    def __init__(self,args=None, load_path=None):
         self.args = args
+
+        if load_path:
+            self.load_path = load_path
+            self.load_from_path()
+
+    def load_from_path(self):
+        self.model = load_model(self.load_path)
 
     # Custom layer to generate per-label weights
     class TrainableMatrix(Layer):
@@ -256,8 +292,9 @@ class CNNAtt_Model:
 
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
 
-        # self.model = self.cnn_att_model(X.shape[1], y.shape[1], embedding_matrix)
-        self.model = self.cnn_att_model(len(X[0]), len(y[0]), embedding_matrix)
+        if not self.model:
+            # self.model = self.cnn_att_model(X.shape[1], y.shape[1], embedding_matrix)
+            self.model = self.cnn_att_model(len(X[0]), len(y[0]), embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -265,11 +302,12 @@ class CNNAtt_Model:
                         epochs=self.args.epochs, batch_size=self.args.batch_size, 
                         callbacks=callbacks, verbose=self.args.verbose)
 
-    def load(self, path):
-        self.model = load_model(path)
-
     def predict(self, X):
         return self.model.predict(X)
+
+    def save_model(self, path):
+        # No need to save model if f1_callback is used, as it already saved model at best epoch
+        self.model.save(path)
 
 
 

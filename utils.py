@@ -6,6 +6,8 @@ from constants import SAVE_DIR, W2V_DIR, W2V_SIZE, MAX_LENGTH
 import model_functions as fun
 import models
 
+from tensorflow.keras.callbacks import LearningRateScheduler
+
 def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()
 
@@ -46,49 +48,30 @@ def convert_data_to_index(string_data, row_dict):
     return [row_dict.get(word, row_dict['_unknown_']) for word in string_data]
 
 
-# def split(df, mlb, all_icds, train_ids, val_ids, test_ids, to_array=True):
-
-#     assert not np.in1d(train_ids, val_ids).any()
-#     assert not np.in1d(train_ids, test_ids).any()
-#     assert not np.in1d(test_ids, val_ids).any()
-       
-#     # Split by HADM_IDS
-#     train_set = df.query("HADM_ID.isin(@train_ids)")
-#     val_set = df.query("HADM_ID.isin(@val_ids)")
-#     test_set = df.query("HADM_ID.isin(@test_ids)")
-
-#     print(f'''
-#     Data Split:{train_set.shape[0]}, {val_set.shape[0]}, {test_set.shape[0]}
-#     ''')
+def lr_schedule_callback(args):
+    # Create scheduler function
+    def scheduler(epoch):
+        if epoch < args.epoch_drop:
+            return args.initial_lr   
+        else:
+            return args.final_lr
     
-#     x = []
-#     y = []
-#     for subset in [train_set, val_set, test_set]:
-#         if to_array:
-#             x.append(np.vstack(subset['int_seq'].to_list())) # Change this
-#         else: 
-#             x.append(subset['clean_text'].to_list())
+    return LearningRateScheduler(scheduler, verbose=0)
 
-#         y.append(mlb.transform(subset['ICD9_CODE']))
-        
-#     # Call model_args class
-#     model_args = fun.model_args(x,y)
-    
-#     return model_args
 
-def get_model(args):
+def get_model(args=None, load_path=None):
 
     if args.MODEL_NAME == 'cte':
-        return models.CTE_Model(args)
+        return models.CTE_Model(args, load_path)
 
     elif args.MODEL_NAME == 'lr':
-        return models.LR_Model(args)
+        return models.LR_Model(args, load_path)
 
     elif args.MODEL_NAME == 'cnn':
-        return models.CNN_Model(args)
+        return models.CNN_Model(args, load_path)
 
     elif args.MODEL_NAME == 'gru':
-        return models.GRU_Model(args)
+        return models.GRU_Model(args, load_path)
 
     elif args.MODEL_NAME == 'cnn_att':
-        return models.CNNAtt_Model(args)
+        return models.CNNAtt_Model(args, load_path)

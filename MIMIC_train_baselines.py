@@ -12,6 +12,8 @@ import utils
 
 def main(args):
 
+    save_path = SAVE_DIR + args.MODEL_NAME
+
     # Clear session
     tf.keras.backend.clear_session()
 
@@ -30,7 +32,7 @@ def main(args):
 
         # Instantiate callback
         f1_callback = fun.f1_callback_save(model, validation_data=(tfidf.x_val, mimic.y_val),
-                                        best_name= SAVE_DIR + args.MODEL_NAME)
+                                        best_name= save_path)
 
         callbacks = [f1_callback]    
 
@@ -38,9 +40,13 @@ def main(args):
         # Fit
         model.fit(tfidf.x_train, mimic.y_train, validation_data=(tfidf.x_val, mimic.y_val), callbacks=callbacks)
 
+
+        # Save model state after last epoch
+        if args.save_last_epoch:
+            model.save(f'{save_path}ep{args.epochs}')
+
         # Restore weights from the best epoch based on F1 val with optimized threshold
-        ### obs: not keeping last epoch, only best one. Maybe also save last epoch for further training? (where to add this?)
-        model.load(path=SAVE_DIR + args.MODEL_NAME)
+        model = utils.get_model(args, load_path = save_path)
 
         # Predict
         y_pred_train = model.predict(tfidf.x_train)
@@ -88,6 +94,7 @@ def arg_parser():
     parser.add_argument('-batch_size', type=int, dest='batch_size', default=32, help='Batch Size.')
     parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning Rate. 0 for article optimized value.')
     parser.add_argument('-k', type=int, dest='k', default=15, help='Fixed k-size of predictions for Constant Model.')
+    parser.add_argument('-save_last_epoch', type=bool, dest='save_lest_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
     parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
     return parser.parse_args()
