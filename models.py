@@ -19,6 +19,7 @@ else:
     ''')
 
 
+
 class CTE_Model:
 
     def __init__(self, args, load_path=None):
