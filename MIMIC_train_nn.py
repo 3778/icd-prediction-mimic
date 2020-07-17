@@ -13,61 +13,63 @@ import utils
 
 def main(args):
 
-    save_path = SAVE_DIR + args.MODEL_NAME
+    with tf.device("/cpu:0"):
 
-    # Clear session
-    tf.keras.backend.clear_session()
+        save_path = SAVE_DIR + args.MODEL_NAME
 
-    # Load data and embeddings
-    mimic = datasets.MIMIC_Dataset()
-    mimic.load_preprocessed()
-    mimic.split()
+        # Clear session
+        tf.keras.backend.clear_session()
 
-    # Load trained embedding
-    embedding = fx.W2V('MIMIC')
+        # Load data and embeddings
+        mimic = datasets.MIMIC_Dataset()
+        mimic.load_preprocessed()
+        mimic.split()
 
-    # Transform using input
-    embedding.transform(mimic)
+        # Load trained embedding
+        embedding = fx.W2V('MIMIC')
 
-    # Call model class
-    model = utils.get_model(args)
-    
+        # Transform using input
+        embedding.transform(mimic)
 
-    # Instantiate callback
-    f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
-                                       best_name = save_path)
+        # Call model class
+        model = utils.get_model(args)
+        
 
-    callbacks = [f1_callback]
+        # Instantiate callback
+        f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
+                                        best_name = save_path)
 
-    # Learning rate single-step schedule
-    if args.schedule_lr: 
-        callbacks.append(utils.lr_schedule_callback(args))
+        callbacks = [f1_callback]
 
-    # Fit
-    model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
+        # Learning rate single-step schedule
+        if args.schedule_lr: 
+            callbacks.append(utils.lr_schedule_callback(args))
 
-    # Save model state after last epoch
-    if args.save_last_epoch:
-        model.save(f'{save_path}ep{args.epochs}')
+        # Fit
+        model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
 
-    # Restore weights from the best epoch based on F1 val with optimized threshold
-    model = utils.get_model(args, load_path = save_path)
+        # Save model state after last epoch
+        if args.save_last_epoch:
+            model.save_model(f'{save_path}ep{args.epochs}')
 
-    # Predict
-    y_pred_train = model.predict(embedding.x_train)
-    y_pred_val = model.predict(embedding.x_val)
-    y_pred_test = model.predict(embedding.x_test)
+        # Restore weights from the best epoch based on F1 val with optimized threshold
+        model = utils.get_model(args, load_path = save_path)
 
-    exp = fun.Experiments(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
-                          y_pred = [y_pred_train, y_pred_val, y_pred_test])
+        # Predict
+        y_pred_train = model.predict(embedding.x_train)
+        y_pred_val = model.predict(embedding.x_val)
+        y_pred_test = model.predict(embedding.x_test)
 
-    # Compute best threshold
-    exp.sweep_thresholds(subset=[0,1,0])
+        exp = fun.Experiments(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
+                            y_pred = [y_pred_train, y_pred_val, y_pred_test])
 
-    print(f'''
-    Metrics @ {exp.sweep_results['best_threshold']}''')
-    # Compute metrics @ best threshold
-    exp.metrics(threshold=exp.sweep_results['best_threshold'])
+        # Compute best threshold
+        exp.sweep_thresholds(subset=[0,1,0])
+
+        print(f'''
+        Metrics @ {exp.sweep_results['best_threshold']}''')
+        # Compute metrics @ best threshold
+        exp.metrics(threshold=exp.sweep_results['best_threshold'])
 
 
 def arg_parser():
@@ -84,7 +86,7 @@ def arg_parser():
     parser.add_argument('-final_lr', type=float, dest='final_lr', default=0.0001, help='Ending lr for schedule. Leave default for CNN_att optimized value.')
     parser.add_argument('-epoch_drop', type=int, dest='epoch_drop', default=2, help='Epoch where lr schedule will shift initial_lr by final_lr. Leave default for CNN_att optimized value.')
     parser.add_argument('-activation', type=str, dest='activation', default='tanh', help='Activation for CNN layers. CuDNNGRU must have tanh activation.')
-    parser.add_argument('-save_last_epoch', type=bool, dest='save_lest_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
+    parser.add_argument('-save_last_epoch', type=bool, dest='save_last_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
     parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
     return parser.parse_args()

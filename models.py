@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization
+from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization, GRU
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
 
@@ -9,14 +9,14 @@ import numpy as np
 import utils
 
 # Check for GPU
-if len(tf.config.experimental.list_physical_devices('GPU')):
-    from tensorflow.keras.layers import CuDNNGRU # CuDNNGRU only runs on GPU
-else:
-    from tensorflow.keras.layers import GRU
-    print(f'''
-    Tensorflow-gpu not installed or no GPU available. 
-    Using CPU instead.
-    ''')
+# if len(tf.config.experimental.list_physical_devices('GPU')):
+#     from tensorflow.keras.layers import CuDNNGRU # CuDNNGRU only runs on GPU
+# else:
+#     from tensorflow.keras.layers import GRU
+#     print(f'''
+#     Tensorflow-gpu not installed or no GPU available. 
+#     Using CPU instead.
+#     ''')
 
 
 
@@ -48,6 +48,7 @@ class LR_Model:
 
         # You could load from path but also get args, in order to continue training. 
         self.args = args 
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -96,6 +97,7 @@ class CNN_Model:
 
     def __init__(self, args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -110,7 +112,7 @@ class CNN_Model:
             self.args.lr = 0.001
 
         # Define model
-        sequence_input = Input(shape=(input_shape,), dtype='int32')
+        sequence_input = Input(shape=(input_shape,),) #dtype='int32'
         
         embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
                                     output_dim = embedding_matrix.shape[1], 
@@ -153,6 +155,7 @@ class GRU_Model:
 
     def __init__(self,args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -175,10 +178,10 @@ class GRU_Model:
                                     input_length = input_shape,
                                     trainable = True) (sequence_input)
 
-        if len(tf.config.experimental.list_physical_devices('GPU')):
-            x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
-        else: 
-            x = GRU(self.args.units, return_sequences=True) (embedding_layer)
+        # if len(tf.config.experimental.list_physical_devices('GPU')):
+        #     x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
+        # else: 
+        x = GRU(self.args.units, return_sequences=True) (embedding_layer)
 
         x = BatchNormalization() (x)
         x = GlobalAveragePooling1D() (x)
@@ -215,6 +218,7 @@ class CNNAtt_Model:
 
     def __init__(self,args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path

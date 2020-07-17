@@ -43,7 +43,7 @@ def main(args):
 
         # Save model state after last epoch
         if args.save_last_epoch:
-            model.save(f'{save_path}ep{args.epochs}')
+            model.save_model(f'{save_path}ep{args.epochs}')
 
         # Restore weights from the best epoch based on F1 val with optimized threshold
         model = utils.get_model(args, load_path = save_path)
@@ -94,7 +94,7 @@ def arg_parser():
     parser.add_argument('-batch_size', type=int, dest='batch_size', default=32, help='Batch Size.')
     parser.add_argument('-lr', type=float, dest='lr', default=0, help='Learning Rate. 0 for article optimized value.')
     parser.add_argument('-k', type=int, dest='k', default=15, help='Fixed k-size of predictions for Constant Model.')
-    parser.add_argument('-save_last_epoch', type=bool, dest='save_lest_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
+    parser.add_argument('-save_last_epoch', type=bool, dest='save_last_epoch', default=False, help='Also save model state at last epoch (additionally to best epoch)')
     parser.add_argument('--verbose', type=int, dest='verbose', default=2, help='Verbose when training.')
 
     return parser.parse_args()

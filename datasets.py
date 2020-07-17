@@ -52,7 +52,7 @@ class MIMIC_Dataset:
         # Fit multi-hot encoder
         hist = utils.make_icds_histogram(self.df)
         self.all_icds = hist.index.tolist()
-        self.mlb = MultiLabelBinarizer(self.all_icds).fit(self.df['ICD9_CODE'])
+        self.mlb = MultiLabelBinarizer(classes=self.all_icds).fit(self.df['ICD9_CODE'])
 
         if not hadm_ids:
             train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
