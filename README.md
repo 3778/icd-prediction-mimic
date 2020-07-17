@@ -17,7 +17,7 @@ This project depends on:
 - nltk==3.3
 - scipy==1.3.1
 - gensim==3.8.0
-- tensorflow==2.0.0 (preferably tensorflow-gpu)
+- tensorflow==2.1.0 (preferably tensorflow-gpu)
 
 
 ## General pipeline:

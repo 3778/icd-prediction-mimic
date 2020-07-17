@@ -213,7 +213,6 @@ class GRU_Model:
         self.model.save(path)
 
 
-
 class CNNAtt_Model:
 
     def __init__(self,args=None, load_path=None):
@@ -227,7 +226,7 @@ class CNNAtt_Model:
     def load_from_path(self):
         self.model = load_model(self.load_path)
 
-    # Custom layer to generate per-label weights
+    #Custom layer to generate per-label weights
     class TrainableMatrix(Layer):
         def __init__(self, n_rows, n_cols, **kwargs):
             super().__init__(**kwargs)
@@ -240,14 +239,14 @@ class CNNAtt_Model:
         def call(self, inputs):
             return self.U
         
-        def get_config(self):
-            # config = super(self.TrainableMatrix, self).get_config()
-            config = super().get_config()
-            config.update({
-                'n_rows': self.n_rows,
-                'n_cols': self.n_cols
-            })
-            return config
+        # def get_config(self):
+        #     # config = super(self.TrainableMatrix, self).get_config()
+        #     config = super(TrainableMatrix, self).get_config()
+        #     config.update({
+        #         'n_rows': self.n_rows,
+        #         'n_cols': self.n_cols
+        #     })
+        #     return config
 
     # Custom layer to apply a LR for each label and then concatenate predictions
     class Hadamard(Layer):
@@ -268,6 +267,10 @@ class CNNAtt_Model:
             return tf.keras.activations.sigmoid(tf.reduce_sum(x*self.kernel + self.bias, axis=-1))
         def compute_output_shape(self, input_shape):
             return input_shape
+
+        # def get_config(self):
+        #     config = super(Hadamard, self).get_config()
+        #     return config
 
     # Main model
     def cnn_att_model(self, input_shape, output_shape, embedding_matrix):
