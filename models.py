@@ -76,7 +76,7 @@ class LR_Model:
     def fit(self, X, y, validation_data=None, callbacks=None):
 
         if not self.model:
-            self.model = self.lr_model(len(X[0]), len(y[0]))
+            self.model = self.lr_model(X[0].shape[0], y[0].shape[0])
 
         if self.args.verbose: self.model.summary()
 
@@ -134,7 +134,7 @@ class CNN_Model:
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
     
         if not self.model:
-            self.model = self.cnn_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.cnn_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -197,7 +197,7 @@ class GRU_Model:
 
         if not self.model:
             # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
-            self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.gru_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -302,7 +302,7 @@ class CNNAtt_Model:
 
         if not self.model:
             # self.model = self.cnn_att_model(X.shape[1], y.shape[1], embedding_matrix)
-            self.model = self.cnn_att_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.cnn_att_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 

@@ -13,63 +13,61 @@ import utils
 
 def main(args):
 
-    with tf.device("/cpu:0"):
+    save_path = SAVE_DIR + args.MODEL_NAME
 
-        save_path = SAVE_DIR + args.MODEL_NAME
+    # Clear session
+    tf.keras.backend.clear_session()
 
-        # Clear session
-        tf.keras.backend.clear_session()
+    # Load data and embeddings
+    mimic = datasets.MIMIC_Dataset()
+    mimic.load_preprocessed()
+    mimic.split()
 
-        # Load data and embeddings
-        mimic = datasets.MIMIC_Dataset()
-        mimic.load_preprocessed()
-        mimic.split()
+    # Load trained embedding
+    embedding = fx.W2V('MIMIC')
 
-        # Load trained embedding
-        embedding = fx.W2V('MIMIC')
+    # Transform using input
+    embedding.transform(mimic)
 
-        # Transform using input
-        embedding.transform(mimic)
+    # Call model class
+    model = utils.get_model(args)
+    
 
-        # Call model class
-        model = utils.get_model(args)
-        
+    # Instantiate callback
+    f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
+                                    best_name = save_path)
 
-        # Instantiate callback
-        f1_callback = fun.f1_callback_save(model, validation_data=(embedding.x_val, mimic.y_val),
-                                        best_name = save_path)
+    callbacks = [f1_callback]
 
-        callbacks = [f1_callback]
+    # Learning rate single-step schedule
+    if args.schedule_lr: 
+        callbacks.append(utils.lr_schedule_callback(args))
 
-        # Learning rate single-step schedule
-        if args.schedule_lr: 
-            callbacks.append(utils.lr_schedule_callback(args))
+    # Fit
+    model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
 
-        # Fit
-        model.fit(embedding.x_train, mimic.y_train, embedding.embedding_matrix, validation_data=(embedding.x_val, mimic.y_val), callbacks=callbacks)
+    # Save model state after last epoch
+    if args.save_last_epoch:
+        model.save_model(f'{save_path}ep{args.epochs}')
 
-        # Save model state after last epoch
-        if args.save_last_epoch:
-            model.save_model(f'{save_path}ep{args.epochs}')
+    # Restore weights from the best epoch based on F1 val with optimized threshold
+    model = utils.get_model(args, load_path = save_path)
 
-        # Restore weights from the best epoch based on F1 val with optimized threshold
-        model = utils.get_model(args, load_path = save_path)
+    # Predict
+    y_pred_train = model.predict(embedding.x_train)
+    y_pred_val = model.predict(embedding.x_val)
+    y_pred_test = model.predict(embedding.x_test)
 
-        # Predict
-        y_pred_train = model.predict(embedding.x_train)
-        y_pred_val = model.predict(embedding.x_val)
-        y_pred_test = model.predict(embedding.x_test)
+    exp = fun.Experiments(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
+                        y_pred = [y_pred_train, y_pred_val, y_pred_test])
 
-        exp = fun.Experiments(y_true = [mimic.y_train, mimic.y_val, mimic.y_test],
-                            y_pred = [y_pred_train, y_pred_val, y_pred_test])
+    # Compute best threshold
+    exp.sweep_thresholds(subset=[0,1,0])
 
-        # Compute best threshold
-        exp.sweep_thresholds(subset=[0,1,0])
-
-        print(f'''
-        Metrics @ {exp.sweep_results['best_threshold']}''')
-        # Compute metrics @ best threshold
-        exp.metrics(threshold=exp.sweep_results['best_threshold'])
+    print(f'''
+    Metrics @ {exp.sweep_results['best_threshold']}''')
+    # Compute metrics @ best threshold
+    exp.metrics(threshold=exp.sweep_results['best_threshold'])
 
 
 def arg_parser():

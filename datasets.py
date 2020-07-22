@@ -72,7 +72,7 @@ class MIMIC_Dataset:
          (self.x_val, self.y_val),
          (self.x_test, self.y_test)) = [
              (self.df.query("HADM_ID.isin(@ids)").TEXT, 
-             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE).tolist())
+             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE))
              for ids in hadm_ids
              ]
         
