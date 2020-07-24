@@ -5,7 +5,7 @@
 ####
 
 from pathlib import Path
-FILEPATH = str(Path(__file__).resolve().parents[0])
+REPO_PATH = str(Path(__file__).resolve().parents[0])
 
 # Word2Vec embedding word-vector dimension
 W2V_SIZE = 300
@@ -18,10 +18,10 @@ MAX_LENGTH = 2000
 # Directories
 
 # Path for MIMI-III tables
-DATA_DIR = FILEPATH + '/data/'
+DATA_DIR = REPO_PATH + '/data/'
 
 # Path to save Word2Vec embeddings 
-W2V_DIR = FILEPATH + '/models/w2v/'
+W2V_DIR = REPO_PATH + '/models/w2v/'
 
 # Path to save trained models
-SAVE_DIR = FILEPATH + '/models/'
+SAVE_DIR = REPO_PATH + '/models/'

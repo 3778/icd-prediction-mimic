@@ -6,7 +6,6 @@ import pickle
 
 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
 
@@ -40,9 +39,8 @@ class TFIDF:
         def transform_subset(X):
             X = X.pipe(utils.preprocessor_tfidf)
 
-            return self.tfidf.transform(X).toarray().tolist() ##### check this #######
+            return self.tfidf.transform(X).toarray() 
 
-        ##### check this ##############
         self.x_train = transform_subset(dataset.x_train)
         self.x_val = transform_subset(dataset.x_val)
         self.x_test = transform_subset(dataset.x_test)
@@ -79,6 +77,11 @@ class W2V:
 
     def fit(self, dataset, verbose=1):
 
+        if verbose:
+            print('''
+            Training embeddings...
+            ''')
+
         token_review = dataset.x_train.pipe(utils.preprocessor)
 
         # Build vocab over train samples
@@ -91,7 +94,10 @@ class W2V:
                             total_examples=self.model_w2v.corpus_count, 
                             epochs=self.model_w2v.epochs)
         elapsed=time() - t0
-        if verbose: print(f'Time taken for Word2vec training: {elapsed} seconds.')
+        if verbose: 
+            print(f'''
+            Time taken for Word2vec training: {elapsed:.2f} seconds.
+            ''')
 
 
         # Create word embedding matrix
@@ -126,10 +132,14 @@ class W2V:
                     .apply(lambda x: np.squeeze(pad_sequences([x], padding = 'post', truncating = 'post',
                                                 maxlen = MAX_LENGTH, value = self.row_dict['_padding_']))))
 
-        ########### [temp solution] check - error: keras can't handle series nor arrays with list inside ###############
-        self.x_train = np.vstack(transform_X(dataset.x_train).to_list()).tolist()
-        self.x_val = np.vstack(transform_X(dataset.x_val).to_list()).tolist()
-        self.x_test = np.vstack(transform_X(dataset.x_test).to_list()).tolist()
+        
+        self.x_train = np.vstack(transform_X(dataset.x_train).to_list())
+        self.x_val = np.vstack(transform_X(dataset.x_val).to_list())
+        self.x_test = np.vstack(transform_X(dataset.x_test).to_list())
+
+        print('''
+            Texts transformed!
+        ''')
 
 
     def save_embedding(self, dataset_name='MIMIC'):

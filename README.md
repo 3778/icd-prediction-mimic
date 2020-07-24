@@ -1,22 +1,26 @@
 
-# Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes
+# Multi-label ICD-9 code prediction from MIMIC-III Discharge Summaries
 
 
-This repository contains code for training and evaluating all models described in the paper [link2paper](url), for the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4).
+This repository contains code for training and evaluating all models described in the paper [Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes](url), for the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4). Four models are implemented:
+
+- Logistic Regression
+- Convolutional Neural Network
+- Recurrent Neural Network with Gated Recurrent Units
+- Convolutional Neural Network with Attention (based on [CAML](https://github.com/jamesmullenbach/caml-mimic))
 
 
 ## Dependencies
 
 This project depends on:
 
-- python>=3.6.5
-- numpy==1.16.4
-- pickle==4.0
-- scikit-learn==0.22
-- pandas==1.0.1
-- nltk==3.3
-- scipy==1.3.1
-- gensim==3.8.0
+- python==3.6.9
+- numpy==1.19.0
+- scikit-learn==0.23.1
+- pandas==0.25.3
+- nltk==3.4.4
+- scipy==1.5.1
+- gensim==3.8.3
 - tensorflow==2.1.0 (preferably tensorflow-gpu)
 
 
@@ -31,7 +35,7 @@ This project depends on:
 	
 ## 2. Run `MIMIC_preprocessing.py` to select discharge summaries and merge MIMIC-III tables.
 
-MIMIC-III tables `NOTEEVENTS`, `DIAGNOSES_ICD` are loaded and joined through admission IDs. From `NOTEEVENTS`, only a single discharge summary is selected per admission ID.
+MIMIC-III tables `NOTEEVENTS`, `DIAGNOSES_ICD` are loaded and merged through admission IDs. From `NOTEEVENTS`, only a single discharge summary is selected per admission ID.
 
 Outputs `data/mimic3_data.pkl`, a DataFrame containing 4 columns:
 
@@ -72,15 +76,16 @@ The fitted model is stored using Tensorflow SavedModel format.
 
 
 ## 5. In `notebooks/`, you will find:
-- **MIMIC_overview.ipynb**, where some data analysis from MIMIC-III discharge summaries are provided.
-- **MIMIC_analyze_predictions.ipynb**, where some additional analyses from the predictions of a model can be seen.
+- **MIMIC_overview.ipynb**, where some data analyses from MIMIC-III discharge summaries are provided.
+- **MIMIC_analyze_predictions.ipynb**, where some additional analyses from the predictions of a model can be computed.
 
 
 ## Analyze trained models:
 
-Our trained models are provided at [physionet_model_link](url). To get predictions and metrics for them:
+Our trained CNN-Att model is provided at [physionet_model_link](url). To get predictions and metrics for it or for any trained model:
 
 - Place the desired models in *models/*.
-- Run steps 1 to 4. 
+- Run steps 1 to 3 (if you haven't already). 
 - In notebook *notebooks/MIMIC_analyze_predictions.ipynb*, select a model and run all cells.
+
 

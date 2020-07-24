@@ -56,7 +56,7 @@ def lr_schedule_callback(args):
         else:
             return args.final_lr
     
-    return LearningRateScheduler(scheduler, verbose=0)
+    return LearningRateScheduler(scheduler, verbose=1)
 
 
 def get_model(args=None, load_path=None):

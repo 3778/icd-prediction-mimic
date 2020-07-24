@@ -8,15 +8,11 @@ import pandas as pd
 import numpy as np
 import utils
 
-# Check for GPU
-# if len(tf.config.experimental.list_physical_devices('GPU')):
-#     from tensorflow.keras.layers import CuDNNGRU # CuDNNGRU only runs on GPU
-# else:
-#     from tensorflow.keras.layers import GRU
-#     print(f'''
-#     Tensorflow-gpu not installed or no GPU available. 
-#     Using CPU instead.
-#     ''')
+# Try to import CuDNNGRU, otherwise use regular GRU
+try:
+   from tensorflow.keras.layers import CuDNNGRU as GRU
+except ImportError:
+   no_requests = True
 
 
 
@@ -178,9 +174,7 @@ class GRU_Model:
                                     input_length = input_shape,
                                     trainable = True) (sequence_input)
 
-        # if len(tf.config.experimental.list_physical_devices('GPU')):
-        #     x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
-        # else: 
+        # Note that if cudnn is available CuDNNGRU will be used for faster training
         x = GRU(self.args.units, return_sequences=True) (embedding_layer)
 
         x = BatchNormalization() (x)
@@ -211,6 +205,7 @@ class GRU_Model:
     def save_model(self, path):
         # No need to save model if f1_callback is used, as it already saved model at best epoch
         self.model.save(path)
+
 
 
 class CNNAtt_Model:
@@ -274,6 +269,9 @@ class CNNAtt_Model:
 
     # Main model
     def cnn_att_model(self, input_shape, output_shape, embedding_matrix):
+
+        if not self.args.lr:
+            self.args.lr = 0.001
 
         # Define model
         sequence_input = Input(shape=(input_shape,), dtype='int32')

@@ -16,7 +16,7 @@ class MIMIC_Dataset:
 
     def load_preprocessed(self, path=DATA_DIR):
         with open(f'{path}mimic3_data.pkl', 'rb') as file:
-            self.df = pickle.load(file) 
+            self.df = pickle.load(file)
 
     def save_preprocessed(self, path=DATA_DIR):
         pd.to_pickle(self.df, f'{path}mimic3_data.pkl')
@@ -47,11 +47,11 @@ class MIMIC_Dataset:
             Data preprocessed!
             ''')
 
-    def split(self, hadm_ids=None, verbose=1):
+    def split(self, hadm_ids=None, transform=True, verbose=1):
 
-        # Fit multi-hot encoder
-        hist = utils.make_icds_histogram(self.df)
-        self.all_icds = hist.index.tolist()
+        with open(f"{DATA_DIR}ordered_icd_list.pkl",'rb') as file:
+            self.all_icds = pickle.load(file)
+        
         self.mlb = MultiLabelBinarizer(classes=self.all_icds).fit(self.df['ICD9_CODE'])
 
         if not hadm_ids:
@@ -75,6 +75,17 @@ class MIMIC_Dataset:
              self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE))
              for ids in hadm_ids
              ]
+
+
+        if not transform:
+            ((self.x_train, self.y_train),
+            (self.x_val, self.y_val),
+            (self.x_test, self.y_test)) = [
+                (self.df.query("HADM_ID.isin(@ids)").TEXT, 
+                self.df.query("HADM_ID.isin(@ids)").ICD9_CODE)
+                for ids in hadm_ids
+                ]
+
         
         if verbose:
             print(f'''
