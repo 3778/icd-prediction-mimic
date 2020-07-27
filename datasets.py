@@ -16,7 +16,7 @@ class MIMIC_Dataset:
 
     def load_preprocessed(self, path=DATA_DIR):
         with open(f'{path}mimic3_data.pkl', 'rb') as file:
-            self.df = pickle.load(file) 
+            self.df = pickle.load(file)
 
     def save_preprocessed(self, path=DATA_DIR):
         pd.to_pickle(self.df, f'{path}mimic3_data.pkl')
@@ -47,17 +47,17 @@ class MIMIC_Dataset:
             Data preprocessed!
             ''')
 
-    def split(self, hadm_ids=None, verbose=1):
+    def split(self, hadm_ids=None, transform=True, verbose=1):
 
-        # Fit multi-hot encoder
-        hist = utils.make_icds_histogram(self.df)
-        self.all_icds = hist.index.tolist()
-        self.mlb = MultiLabelBinarizer(self.all_icds).fit(self.df['ICD9_CODE'])
+        # Load ordered list of ICD classes (sorted list of all available ICD codes)
+        self.all_icds = utils.load_list_from_txt(f'{DATA_DIR}ordered_icd_list.txt')
+        
+        self.mlb = MultiLabelBinarizer(classes=self.all_icds).fit(self.df['ICD9_CODE'])
 
         if not hadm_ids:
-            train_ids = utils.load_ids_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
-            val_ids = utils.load_ids_from_txt(f'{DATA_DIR}dev_full_hadm_ids.csv')
-            test_ids = utils.load_ids_from_txt(f'{DATA_DIR}test_full_hadm_ids.csv')
+            train_ids = utils.load_list_from_txt(f'{DATA_DIR}train_full_hadm_ids.csv')
+            val_ids = utils.load_list_from_txt(f'{DATA_DIR}dev_full_hadm_ids.csv')
+            test_ids = utils.load_list_from_txt(f'{DATA_DIR}test_full_hadm_ids.csv')
 
             hadm_ids = [train_ids, val_ids, test_ids]
     
@@ -72,9 +72,20 @@ class MIMIC_Dataset:
          (self.x_val, self.y_val),
          (self.x_test, self.y_test)) = [
              (self.df.query("HADM_ID.isin(@ids)").TEXT, 
-             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE).tolist())
+             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE))
              for ids in hadm_ids
              ]
+
+
+        if not transform:
+            ((self.x_train, self.y_train),
+            (self.x_val, self.y_val),
+            (self.x_test, self.y_test)) = [
+                (self.df.query("HADM_ID.isin(@ids)").TEXT, 
+                self.df.query("HADM_ID.isin(@ids)").ICD9_CODE)
+                for ids in hadm_ids
+                ]
+
         
         if verbose:
             print(f'''

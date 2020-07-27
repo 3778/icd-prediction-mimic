@@ -12,7 +12,7 @@ def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()
 
 
-def load_ids_from_txt(filepath):
+def load_list_from_txt(filepath):
     with open(filepath, 'r') as f:
         return f.read().split()
 
@@ -56,7 +56,7 @@ def lr_schedule_callback(args):
         else:
             return args.final_lr
     
-    return LearningRateScheduler(scheduler, verbose=0)
+    return LearningRateScheduler(scheduler, verbose=1)
 
 
 def get_model(args=None, load_path=None):

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization
+from tensorflow.keras.layers import Input, Embedding, Dense, Conv1D, GlobalAveragePooling1D, BatchNormalization, GRU
 from tensorflow.keras.layers import Layer, Attention
 from tensorflow.keras.optimizers import Adam
 
@@ -8,15 +8,12 @@ import pandas as pd
 import numpy as np
 import utils
 
-# Check for GPU
-if len(tf.config.experimental.list_physical_devices('GPU')):
-    from tensorflow.keras.layers import CuDNNGRU # CuDNNGRU only runs on GPU
-else:
-    from tensorflow.keras.layers import GRU
-    print(f'''
-    Tensorflow-gpu not installed or no GPU available. 
-    Using CPU instead.
-    ''')
+# Try to import CuDNNGRU, otherwise use regular GRU
+try:
+   from tensorflow.keras.layers import CuDNNGRU as GRU
+except ImportError:
+   no_requests = True
+
 
 
 class CTE_Model:
@@ -27,7 +24,7 @@ class CTE_Model:
     def cte_model(self):
         pass
     
-    def fit(self, y=None, most_occ_train=None): # CTE_Model does not use X data
+    def fit(self, most_occ_train=None): # CTE_Model does not use X data 
         
         # Select most occuring ICDs in train set
         self.most_occ_train = most_occ_train[:self.args.k]
@@ -47,6 +44,7 @@ class LR_Model:
 
         # You could load from path but also get args, in order to continue training. 
         self.args = args 
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -74,7 +72,7 @@ class LR_Model:
     def fit(self, X, y, validation_data=None, callbacks=None):
 
         if not self.model:
-            self.model = self.lr_model(len(X[0]), len(y[0]))
+            self.model = self.lr_model(X[0].shape[0], y[0].shape[0])
 
         if self.args.verbose: self.model.summary()
 
@@ -95,6 +93,7 @@ class CNN_Model:
 
     def __init__(self, args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -109,7 +108,7 @@ class CNN_Model:
             self.args.lr = 0.001
 
         # Define model
-        sequence_input = Input(shape=(input_shape,), dtype='int32')
+        sequence_input = Input(shape=(input_shape,),) #dtype='int32'
         
         embedding_layer = Embedding(input_dim = embedding_matrix.shape[0], 
                                     output_dim = embedding_matrix.shape[1], 
@@ -131,7 +130,7 @@ class CNN_Model:
     def fit(self, X, y, embedding_matrix, validation_data=None, callbacks=None):
     
         if not self.model:
-            self.model = self.cnn_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.cnn_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -152,6 +151,7 @@ class GRU_Model:
 
     def __init__(self,args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -174,10 +174,8 @@ class GRU_Model:
                                     input_length = input_shape,
                                     trainable = True) (sequence_input)
 
-        if len(tf.config.experimental.list_physical_devices('GPU')):
-            x = CuDNNGRU(self.args.units, return_sequences=True) (embedding_layer)
-        else: 
-            x = GRU(self.args.units, return_sequences=True) (embedding_layer)
+        # Note that if cudnn is available CuDNNGRU will be used for faster training
+        x = GRU(self.args.units, return_sequences=True) (embedding_layer)
 
         x = BatchNormalization() (x)
         x = GlobalAveragePooling1D() (x)
@@ -193,7 +191,7 @@ class GRU_Model:
 
         if not self.model:
             # self.model = self.gru_model(X.shape[1], y.shape[1], embedding_matrix)
-            self.model = self.gru_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.gru_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 
@@ -214,6 +212,7 @@ class CNNAtt_Model:
 
     def __init__(self,args=None, load_path=None):
         self.args = args
+        self.model = None
 
         if load_path:
             self.load_path = load_path
@@ -222,7 +221,7 @@ class CNNAtt_Model:
     def load_from_path(self):
         self.model = load_model(self.load_path)
 
-    # Custom layer to generate per-label weights
+    #Custom layer to generate per-label weights
     class TrainableMatrix(Layer):
         def __init__(self, n_rows, n_cols, **kwargs):
             super().__init__(**kwargs)
@@ -235,14 +234,14 @@ class CNNAtt_Model:
         def call(self, inputs):
             return self.U
         
-        def get_config(self):
-            # config = super(self.TrainableMatrix, self).get_config()
-            config = super().get_config()
-            config.update({
-                'n_rows': self.n_rows,
-                'n_cols': self.n_cols
-            })
-            return config
+        # def get_config(self):
+        #     # config = super(self.TrainableMatrix, self).get_config()
+        #     config = super(TrainableMatrix, self).get_config()
+        #     config.update({
+        #         'n_rows': self.n_rows,
+        #         'n_cols': self.n_cols
+        #     })
+        #     return config
 
     # Custom layer to apply a LR for each label and then concatenate predictions
     class Hadamard(Layer):
@@ -264,8 +263,15 @@ class CNNAtt_Model:
         def compute_output_shape(self, input_shape):
             return input_shape
 
+        # def get_config(self):
+        #     config = super(Hadamard, self).get_config()
+        #     return config
+
     # Main model
     def cnn_att_model(self, input_shape, output_shape, embedding_matrix):
+
+        if not self.args.lr:
+            self.args.lr = 0.001
 
         # Define model
         sequence_input = Input(shape=(input_shape,), dtype='int32')
@@ -294,7 +300,7 @@ class CNNAtt_Model:
 
         if not self.model:
             # self.model = self.cnn_att_model(X.shape[1], y.shape[1], embedding_matrix)
-            self.model = self.cnn_att_model(len(X[0]), len(y[0]), embedding_matrix)
+            self.model = self.cnn_att_model(X[0].shape[0], y[0].shape[0], embedding_matrix)
 
         if self.args.verbose: self.model.summary()
 

@@ -15,13 +15,13 @@ def main(args):
     w2v = fx.W2V(args)
 
     # Train
-    w2v.fit(mimic.x_train)
+    w2v.fit(mimic)
 
     # Save embedding matrix
     w2v.save_embedding(dataset_name=mimic.name)
 
     print(f'''
-    Word2Vec embeddings saved!
+        Word2Vec embeddings saved!
     ''')
 
 
