@@ -91,8 +91,6 @@ class Experiments:
         sweep_prec = []
         sweep_rec = []
         sweep_avg_pred = []
-
-        #assert type(subset) == list and len(subset) == len(self.y_true) and sum(subset)==1, 'Chose a single subset for this experiment!'
         
         subset_idx = subset.index(1)
 
@@ -118,7 +116,7 @@ class Experiments:
                                 }
 
         if verbose:
-            print(f'''Best Threshold: {best_t}''')
+            print(f'''Best Threshold: {best_t:.2f}''')
 
 
     def sweep_k(self, subset=[0,1,0], ks = np.linspace(1,20,20, dtype='int32'), avg='micro', verbose=1):

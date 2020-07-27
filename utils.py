@@ -12,7 +12,7 @@ def make_icds_histogram(df):
     return df.ICD9_CODE.explode().value_counts()
 
 
-def load_ids_from_txt(filepath):
+def load_list_from_txt(filepath):
     with open(filepath, 'r') as f:
         return f.read().split()
 

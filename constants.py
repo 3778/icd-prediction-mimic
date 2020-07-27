@@ -1,7 +1,7 @@
 #### 
 # Constants
 
-# Edit this file with your directories and desired values
+# Edit this file with your desired values
 ####
 
 from pathlib import Path

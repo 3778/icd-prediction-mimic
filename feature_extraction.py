@@ -39,11 +39,15 @@ class TFIDF:
         def transform_subset(X):
             X = X.pipe(utils.preprocessor_tfidf)
 
-            return self.tfidf.transform(X).toarray() 
+            return self.tfidf.transform(X).toarray()
 
         self.x_train = transform_subset(dataset.x_train)
         self.x_val = transform_subset(dataset.x_val)
         self.x_test = transform_subset(dataset.x_test)
+
+        print('''
+            Texts transformed!
+        ''')
 
 
 class W2V:

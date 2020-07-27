@@ -24,7 +24,7 @@ class CTE_Model:
     def cte_model(self):
         pass
     
-    def fit(self, y=None, most_occ_train=None): # CTE_Model does not use X data
+    def fit(self, most_occ_train=None): # CTE_Model does not use X data 
         
         # Select most occuring ICDs in train set
         self.most_occ_train = most_occ_train[:self.args.k]

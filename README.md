@@ -1,8 +1,7 @@
 
-# Multi-label ICD-9 code prediction from MIMIC-III Discharge Summaries
+# Predicting ICD-9 Codes from Clinical Notes
 
-
-This repository contains code for training and evaluating all models described in the paper [Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes](url), for the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4). Four models are implemented:
+This repository contains code for training and evaluating several neural network models for predicting ICD-9 codes from discharge summaries on the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4). The models are described in the paper [Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes](url), which uses the results on MIMIC-III as a benchmark. The implemented models are:
 
 - Logistic Regression
 - Convolutional Neural Network
@@ -77,15 +76,7 @@ The fitted model is stored using Tensorflow SavedModel format.
 
 ## 5. In `notebooks/`, you will find:
 - **MIMIC_overview.ipynb**, where some data analyses from MIMIC-III discharge summaries are provided.
-- **MIMIC_analyze_predictions.ipynb**, where some additional analyses from the predictions of a model can be computed.
+- **MIMIC_analyze_predictions.ipynb**, where some additional analyses from the predictions of a trained model with W2V embeddings can be computed. The shown outputs are from our CNN-Att model. Edit the first cell with the desired model name and run all cells. 
 
-
-## Analyze trained models:
-
-Our trained CNN-Att model is provided at [physionet_model_link](url). To get predictions and metrics for it or for any trained model:
-
-- Place the desired models in *models/*.
-- Run steps 1 to 3 (if you haven't already). 
-- In notebook *notebooks/MIMIC_analyze_predictions.ipynb*, select a model and run all cells.
 
 

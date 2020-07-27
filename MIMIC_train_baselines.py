@@ -68,7 +68,8 @@ def main(args):
 
     elif args.MODEL_NAME == 'cte':
 
-        model.fit(mimic.y_train, most_occ_train=mimic.all_icds_train)  
+        # model.fit(mimic.y_train, most_occ_train=mimic.all_icds_train)
+        model.fit(most_occ_train=mimic.all_icds_train) 
 
         # Predict
         y_pred_train = model.predict(mimic.x_train, mlb=mimic.mlb)
