@@ -1,7 +1,7 @@
 
 # Predicting ICD-9 Codes from Clinical Notes
 
-This repository contains code for training and evaluating several neural network models for predicting ICD-9 codes from discharge summaries on the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4). The models are described in the paper [Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes](url), which uses the results on MIMIC-III as a benchmark. The implemented models are:
+This repository contains code for training and evaluating several neural network models for predicting ICD codes from discharge summaries on the publicly acessible [MIMIC-III](https://mimic.physionet.org/gettingstarted/overview/) dataset (v. 1.4). The models are described in the paper [Predicting Multiple ICD-10 Codes from Brazilian-Portuguese Clinical Notes](url), which uses the results on MIMIC-III as a benchmark. The implemented models are:
 
 - Logistic Regression
 - Convolutional Neural Network
