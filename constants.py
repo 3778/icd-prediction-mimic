@@ -1,8 +1,4 @@
-#### 
-# Constants
-
 # Edit this file with your desired values
-####
 
 from pathlib import Path
 REPO_PATH = str(Path(__file__).resolve().parents[0])

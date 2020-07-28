@@ -1,9 +1,7 @@
-
 import numpy as np
 from time import time
 import random
 import pickle
-
 
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.feature_extraction.text import TfidfVectorizer

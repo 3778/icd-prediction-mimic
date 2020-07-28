@@ -4,7 +4,6 @@ import argparse
 import tensorflow as tf
 
 from constants import DATA_DIR, SAVE_DIR
-
 import datasets
 import feature_extraction as fx
 import model_functions as fun
