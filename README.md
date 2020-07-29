@@ -61,9 +61,7 @@ Computes the `k` most ocurring ICDs in the training set and predicts them for al
 
 - For LR:
 Computes *TF-IDF* features in the training set. Then, fits the LR model to the training set.
-After training, the weights of the epoch with best micro F1 in the validation set are restored and threshold-optimized metrics are computed for all subsets.
-
-Here, the fitted model is stored using Tensorflow SavedModel format.
+After training, the weights of the epoch with best micro F1 in the validation set are restored and threshold-optimized metrics are computed for all subsets. The fitted model is stored using Tensorflow SavedModel format.
 
 
 ### 4.2. Run `MIMIC_train_nn.py`, for CNN, GRU and CNN-Att.
