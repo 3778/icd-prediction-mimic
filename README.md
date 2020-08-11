@@ -18,7 +18,7 @@ This project depends on:
 - scikit-learn==0.23.1
 - pandas==0.25.3
 - nltk==3.4.4
-- scipy==1.5.1
+- scipy==1.4.1
 - gensim==3.8.3
 - tensorflow==2.1.0 (preferably tensorflow-gpu)
 
