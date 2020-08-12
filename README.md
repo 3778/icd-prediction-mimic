@@ -40,7 +40,7 @@ Outputs `data/mimic3_data.pkl`, a DataFrame containing 4 columns:
 
 - **HADM_ID**: the admission IDs of each patient stay. 
 - **SUBJECT_ID**: the patient IDs. A patient may have multiple admissions, hence a `SUBJECT_ID` may be linked to multiple `HADM_IDs`.
-- **TEXT**: the discharge summaries, one for each HADM_ID.
+- **TEXT**: the discharge summaries, one for each `HADM_ID`.
 - **ICD9_CODE**: a list of ICD codes assigned to each stay (i.e. to each `HADM_ID`).
 
 ## 3. Run `MIMIC_train_w2v.py` to train Word2Vec word embeddings for the neural network models.
