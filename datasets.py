@@ -80,13 +80,13 @@ class MIMIC_Dataset:
         assert not np.in1d(hadm_ids[2], hadm_ids[1]).any(), 'Data leakage!'
 
         # Get most occurring icds in training set
-        self.all_icds_train = utils.make_icds_histogram(self.df.query("HADM_ID.isin(@hadm_ids[0])")).index.tolist()
+        self.all_icds_train = utils.make_icds_histogram(self.df[self.df['HADM_ID'].isin(hadm_ids[0])]).index.tolist()
 
         ((self.x_train, self.y_train),
          (self.x_val, self.y_val),
          (self.x_test, self.y_test)) = [
-             (self.df.query("HADM_ID.isin(@ids)").TEXT, 
-             self.mlb.transform(self.df.query("HADM_ID.isin(@ids)").ICD9_CODE))
+             (self.df[self.df['HADM_ID'].isin(ids)]['TEXT'], 
+             self.mlb.transform(self.df[self.df['HADM_ID'].isin(ids)]['ICD9_CODE']))
              for ids in hadm_ids
              ]
 
